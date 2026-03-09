@@ -14,8 +14,8 @@ func InitRepo() error {
 		return errors.Errorf("failed to get working directory: %w", err)
 	}
 
-	previewCtrlConfigDirPath := workingDir + "/" + constants.PreviewCtrlConfigDir
-	previewCtrlConfigFilePath := previewCtrlConfigDirPath + "/" + constants.PreviewCtrlConfigFile
+	previewCtrlConfigDirPath := constants.PreviewCtrlConfigDirPath(workingDir)
+	previewCtrlConfigFilePath := constants.PreviewCtrlConfigFilePath(workingDir)
 
 	err = os.MkdirAll(previewCtrlConfigDirPath, os.ModePerm)
 	if err != nil {

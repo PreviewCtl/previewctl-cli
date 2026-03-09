@@ -5,6 +5,7 @@ go 1.26.0
 require (
 	github.com/go-errors/errors v1.5.1
 	github.com/spf13/cobra v1.10.2
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
