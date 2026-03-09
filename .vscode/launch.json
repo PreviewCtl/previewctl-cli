@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug: up",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/main.go",
+            "args": [
+                "up",
+                "--preview-id",
+                "123",
+                "--secret",
+                "test=test1",
+                "--secret",
+                "test1=test1"
+            ]
+        }
+    ]
+}

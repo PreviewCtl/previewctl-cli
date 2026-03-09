@@ -12,7 +12,6 @@ services:
     port: 3000
     env:
       API_URL: http://${services.api.host}:${services.api.port}
-      PREVIEW_ID: ${preview.id}
 
     depends_on:
       - api
@@ -27,9 +26,8 @@ services:
       DATABASE_PORT: ${services.postgres.port}
       REDIS_HOST: ${services.redis.host}
       REDIS_PORT: ${services.redis.port}
-      DATABASE_PASSWORD: ${secrets.DATABASE_PASSWORD}
+      DATABASE_URL: ${services.postgres.env.POSTGRES_URL}
       STRIPE_API_KEY: ${secrets.STRIPE_API_KEY}
-      PREVIEW_ID: ${preview.id}
 
     depends_on:
       - postgres
@@ -43,7 +41,6 @@ services:
     env:
       REDIS_HOST: ${services.redis.host}
       REDIS_PORT: ${services.redis.port}
-      PREVIEW_ID: ${preview.id}
 
     depends_on:
       - redis
@@ -52,7 +49,10 @@ services:
     image: postgres:16
     port: 5432
     env:
-      POSTGRES_PASSWORD: ${secrets.POSTGRES_PASSWORD}
+      POSTGRES_DB: mydb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${Generate(16)}
+      POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${services.postgres.host}:${services.postgres.port}/${POSTGRES_DB}?sslmode=disable
 
   redis:
     image: redis:7
