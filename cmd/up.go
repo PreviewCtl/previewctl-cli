@@ -64,7 +64,7 @@ required dependency order.`,
 
 		merged := secrets.Merge(secrets.ParseOSEnv(), envSecrets, flagSecrets)
 
-		if err := up.HandleUp(resolvedPreviewID, config, merged, workingDir); err != nil {
+		if err := up.HandleUp(cmd.Context(), resolvedPreviewID, config, merged, workingDir); err != nil {
 			return err
 		}
 
