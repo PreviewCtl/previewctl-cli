@@ -22,11 +22,7 @@ var rootCmd = &cobra.Command{
 preview environments locally using Docker.
 
 Define your services, builds, and dependencies in a .previewctrl/preview.yml
-config file and bring them up with a single command.
-
-  previewctl init        Scaffold a new .previewctrl/ config directory
-  previewctl validate    Validate your preview.yml configuration
-  previewctl up          Build and deploy all services locally`,
+config file and bring them up with a single command.`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		datasource, err := database.DefaultDatasource()
 		if err != nil {
