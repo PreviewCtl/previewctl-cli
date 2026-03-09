@@ -18,7 +18,8 @@ import (
 // RunService creates and starts a container for the given service.
 // The container is named "{networkName}-{serviceName}" and attached to the
 // specified Docker network with serviceName as a network alias for DNS resolution.
-func RunService(ctx context.Context, cli *client.Client, networkName, serviceName string, svc types.ServiceConfig, workingDir string) (string, error) {
+// It returns the container ID and the dynamically assigned host port (0 if no port exposed).
+func RunService(ctx context.Context, cli *client.Client, networkName, serviceName string, svc types.ServiceConfig, workingDir string) (string, int, error) {
 	containerName := networkName + "-" + serviceName
 
 	// Stop and remove existing container if present (idempotent re-runs)
@@ -42,7 +43,7 @@ func RunService(ctx context.Context, cli *client.Client, networkName, serviceNam
 	// Host config with port bindings and volumes
 	binds, err := resolveVolumePaths(svc.Volumes, serviceName, workingDir)
 	if err != nil {
-		return "", fmt.Errorf("failed to prepare volumes: %w", err)
+		return "", 0, fmt.Errorf("failed to prepare volumes: %w", err)
 	}
 	hostConfig := &container.HostConfig{
 		Binds: binds,
@@ -55,7 +56,7 @@ func RunService(ctx context.Context, cli *client.Client, networkName, serviceNam
 		}
 		hostConfig.PortBindings = network.PortMap{
 			port: []network.PortBinding{
-				{HostIP: netip.IPv4Unspecified(), HostPort: strconv.Itoa(svc.Port)},
+				{HostIP: netip.IPv4Unspecified(), HostPort: "0"},
 			},
 		}
 	}
@@ -76,14 +77,27 @@ func RunService(ctx context.Context, cli *client.Client, networkName, serviceNam
 		Name:             containerName,
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to create container %q: %w", containerName, err)
+		return "", 0, fmt.Errorf("failed to create container %q: %w", containerName, err)
 	}
 
 	if _, err := cli.ContainerStart(ctx, resp.ID, client.ContainerStartOptions{}); err != nil {
-		return "", fmt.Errorf("failed to start container %q: %w", containerName, err)
+		return "", 0, fmt.Errorf("failed to start container %q: %w", containerName, err)
 	}
 
-	return resp.ID, nil
+	// Discover the dynamically assigned host port
+	var hostPort int
+	if svc.Port > 0 {
+		inspect, err := cli.ContainerInspect(ctx, resp.ID, client.ContainerInspectOptions{})
+		if err != nil {
+			return "", 0, fmt.Errorf("failed to inspect container %q: %w", containerName, err)
+		}
+		portKey := network.MustParsePort(strconv.Itoa(svc.Port) + "/tcp")
+		if bindings, ok := inspect.Container.NetworkSettings.Ports[portKey]; ok && len(bindings) > 0 {
+			hostPort, _ = strconv.Atoi(bindings[0].HostPort)
+		}
+	}
+
+	return resp.ID, hostPort, nil
 }
 
 // resolveVolumePaths maps container paths to host paths under .previewctrl/data/{serviceName}/.

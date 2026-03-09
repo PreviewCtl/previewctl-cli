@@ -33,6 +33,13 @@ func HandleUp(ctx context.Context, previewID string, config types.PreviewConfig,
 		return err
 	}
 
+	type portMapping struct {
+		service       string
+		containerPort int
+		hostPort      int
+	}
+	var portMappings []portMapping
+
 	for _, serviceName := range deploymentOrder {
 		svc := resolvedConfig.Services[serviceName]
 		fmt.Printf("deploying %s...\n", serviceName)
@@ -41,14 +48,30 @@ func HandleUp(ctx context.Context, previewID string, config types.PreviewConfig,
 			return fmt.Errorf("service %q: %w", serviceName, err)
 		}
 
-		containerID, err := docker.RunService(ctx, cli, previewID, serviceName, svc, workingDir)
+		containerID, hostPort, err := docker.RunService(ctx, cli, previewID, serviceName, svc, workingDir)
 		if err != nil {
 			return fmt.Errorf("service %q: %w", serviceName, err)
 		}
 
 		fmt.Printf("  started %s (container %s)\n", serviceName, containerID[:12])
+
+		if svc.Port > 0 && hostPort > 0 {
+			portMappings = append(portMappings, portMapping{
+				service:       serviceName,
+				containerPort: svc.Port,
+				hostPort:      hostPort,
+			})
+		}
 	}
 
-	fmt.Println("all services deployed successfully")
+	fmt.Println("\nall services deployed successfully")
+
+	if len(portMappings) > 0 {
+		fmt.Println("\nPort mappings:")
+		for _, pm := range portMappings {
+			fmt.Printf("  %-20s localhost:%d -> :%d/tcp\n", pm.service, pm.hostPort, pm.containerPort)
+		}
+	}
+
 	return nil
 }
