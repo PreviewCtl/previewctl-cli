@@ -48,6 +48,8 @@ services:
   postgres:
     image: postgres:16
     port: 5432
+    volumes:
+      - /var/lib/postgresql/data
     env:
       POSTGRES_DB: mydb
       POSTGRES_USER: postgres

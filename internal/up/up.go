@@ -10,7 +10,7 @@ import (
 	"github.com/previewctl/previewctl-cli/pkg/types"
 )
 
-func HandleUp(previewID string, config types.PreviewConfig, secrets map[string]string) error {
+func HandleUp(previewID string, config types.PreviewConfig, secrets map[string]string, workingDir string) error {
 	resolvedConfig, err := resolver.ResolveConfig(config, previewID, secrets)
 	if err != nil {
 		return fmt.Errorf("failed to resolve config variables: %w", err)
@@ -43,7 +43,7 @@ func HandleUp(previewID string, config types.PreviewConfig, secrets map[string]s
 			return fmt.Errorf("service %q: %w", serviceName, err)
 		}
 
-		containerID, err := docker.RunService(ctx, cli, previewID, serviceName, svc)
+		containerID, err := docker.RunService(ctx, cli, previewID, serviceName, svc, workingDir)
 		if err != nil {
 			return fmt.Errorf("service %q: %w", serviceName, err)
 		}

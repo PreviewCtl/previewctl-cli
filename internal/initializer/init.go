@@ -2,6 +2,8 @@ package initializer
 
 import (
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/go-errors/errors"
 	"github.com/previewctl/previewctl-cli/pkg/constants"
@@ -32,6 +34,45 @@ func InitRepo() error {
 		return errors.Errorf("failed to create config: %w", err)
 	}
 
-	return nil
+	if err := addDataDirToGitignore(workingDir); err != nil {
+		return err
+	}
 
+	return nil
+}
+
+func addDataDirToGitignore(workingDir string) error {
+	gitignorePath := filepath.Join(workingDir, ".gitignore")
+	entry := constants.PreviewCtrlConfigDir + "/data/"
+
+	data, err := os.ReadFile(gitignorePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return errors.Errorf("failed to read .gitignore: %w", err)
+	}
+
+	for _, line := range strings.Split(string(data), "\n") {
+		if strings.TrimSpace(line) == entry {
+			return nil
+		}
+	}
+
+	f, err := os.OpenFile(gitignorePath, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		return errors.Errorf("failed to open .gitignore: %w", err)
+	}
+	defer f.Close()
+
+	prefix := "\n"
+	if len(data) > 0 && data[len(data)-1] == '\n' {
+		prefix = ""
+	}
+
+	if _, err := f.WriteString(prefix + "\n# PreviewCtrl volume data\n" + entry + "\n"); err != nil {
+		return errors.Errorf("failed to write to .gitignore: %w", err)
+	}
+
+	return nil
 }

@@ -4,18 +4,21 @@ import (
 	"context"
 	"fmt"
 	"net/netip"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/api/types/network"
 	"github.com/moby/moby/client"
+	"github.com/previewctl/previewctl-cli/pkg/constants"
 	"github.com/previewctl/previewctl-cli/pkg/types"
 )
 
 // RunService creates and starts a container for the given service.
 // The container is named "{networkName}-{serviceName}" and attached to the
 // specified Docker network with serviceName as a network alias for DNS resolution.
-func RunService(ctx context.Context, cli *client.Client, networkName, serviceName string, svc types.ServiceConfig) (string, error) {
+func RunService(ctx context.Context, cli *client.Client, networkName, serviceName string, svc types.ServiceConfig, workingDir string) (string, error) {
 	containerName := networkName + "-" + serviceName
 
 	// Stop and remove existing container if present (idempotent re-runs)
@@ -36,8 +39,14 @@ func RunService(ctx context.Context, cli *client.Client, networkName, serviceNam
 		Env:   env,
 	}
 
-	// Host config with port bindings
-	hostConfig := &container.HostConfig{}
+	// Host config with port bindings and volumes
+	binds, err := resolveVolumePaths(svc.Volumes, serviceName, workingDir)
+	if err != nil {
+		return "", fmt.Errorf("failed to prepare volumes: %w", err)
+	}
+	hostConfig := &container.HostConfig{
+		Binds: binds,
+	}
 
 	if svc.Port > 0 {
 		port := network.MustParsePort(strconv.Itoa(svc.Port) + "/tcp")
@@ -75,4 +84,20 @@ func RunService(ctx context.Context, cli *client.Client, networkName, serviceNam
 	}
 
 	return resp.ID, nil
+}
+
+// resolveVolumePaths maps container paths to host paths under .previewctrl/data/{serviceName}/.
+// Each volume entry is a container path (e.g. "/var/lib/postgresql/data").
+// The host path is derived as {workingDir}/.previewctrl/data/{serviceName}/{sanitized-container-path}.
+func resolveVolumePaths(volumes []string, serviceName, workingDir string) ([]string, error) {
+	binds := make([]string, 0, len(volumes))
+	for _, containerPath := range volumes {
+		sanitized := strings.ReplaceAll(strings.Trim(containerPath, "/"), "/", "_")
+		hostPath := filepath.Join(constants.PreviewCtrlConfigDirPath(workingDir), "data", serviceName, sanitized)
+		// if err := os.MkdirAll(hostPath, 0o777); err != nil {
+		// 	return nil, fmt.Errorf("failed to create volume directory %q: %w", hostPath, err)
+		// }
+		binds = append(binds, hostPath+":"+containerPath)
+	}
+	return binds, nil
 }

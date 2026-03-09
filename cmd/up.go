@@ -62,9 +62,9 @@ required dependency order.`,
 			return err
 		}
 
-		merged := secrets.Merge(envSecrets, flagSecrets)
+		merged := secrets.Merge(secrets.ParseOSEnv(), envSecrets, flagSecrets)
 
-		if err := up.HandleUp(resolvedPreviewID, config, merged); err != nil {
+		if err := up.HandleUp(resolvedPreviewID, config, merged, workingDir); err != nil {
 			return err
 		}
 

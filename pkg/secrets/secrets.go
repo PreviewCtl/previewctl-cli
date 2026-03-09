@@ -78,6 +78,17 @@ func Merge(maps ...map[string]string) map[string]string {
 	return merged
 }
 
+// ParseOSEnv collects all current OS environment variables into a map.
+func ParseOSEnv() map[string]string {
+	result := make(map[string]string)
+	for _, entry := range os.Environ() {
+		if k, v, ok := strings.Cut(entry, "="); ok && k != "" {
+			result[k] = v
+		}
+	}
+	return result
+}
+
 func parseEntry(entry string) (string, string, error) {
 	parts := strings.SplitN(entry, "=", 2)
 	if len(parts) != 2 {

@@ -16,6 +16,7 @@ type ServiceConfig struct {
 	Image     string            `yaml:"image,omitempty"`
 	Port      int               `yaml:"port,omitempty"`
 	Env       map[string]string `yaml:"env,omitempty"`
+	Volumes   []string          `yaml:"volumes,omitempty"`
 	DependsOn []string          `yaml:"depends_on,omitempty"`
 }
 

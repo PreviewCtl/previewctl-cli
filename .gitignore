@@ -32,3 +32,5 @@ go.work.sum
 # .vscode/
 main
 previewctl-cli
+# PreviewCtrl volume data
+.previewctrl/data/
