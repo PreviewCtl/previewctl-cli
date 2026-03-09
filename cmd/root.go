@@ -1,10 +1,18 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/spf13/cobra"
+
+	"github.com/previewctl/previewctl-cli/internal/store/database"
 )
+
+// DB is the global database handle, available to all subcommands.
+var DB *sqlx.DB
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -16,9 +24,24 @@ examples and usage of using your application. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		datasource, err := database.DefaultDatasource()
+		if err != nil {
+			return fmt.Errorf("failed to resolve database path: %w", err)
+		}
+
+		if err := os.MkdirAll(filepath.Dir(datasource), 0o700); err != nil {
+			return fmt.Errorf("failed to create data directory: %w", err)
+		}
+
+		db, err := database.ConnectAndMigrate(cmd.Context(), datasource, database.Migrate)
+		if err != nil {
+			return fmt.Errorf("failed to initialize database: %w", err)
+		}
+
+		DB = db
+		return nil
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

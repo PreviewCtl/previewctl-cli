@@ -9,8 +9,6 @@
             "program": "${workspaceFolder}/main.go",
             "args": [
                 "up",
-                "--preview-id",
-                "123",
                 "--secret",
                 "test=test1",
                 "--secret",

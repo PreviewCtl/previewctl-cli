@@ -11,13 +11,13 @@ import (
 // ResolvePreviewID returns a valid preview ID. If inputID is non-empty it is
 // validated and returned. Otherwise a new ID is generated from the workspace
 // directory name with a random numeric suffix.
-func ResolvePreviewID(inputID string, workingDir string) (id string, generated bool, err error) {
+func ResolvePreviewID(inputID string, workingDir string, branch string) (id string, err error) {
 	trimmed := strings.TrimSpace(inputID)
 	if trimmed != "" {
 		if !IsValidResourceName(trimmed) {
-			return "", false, fmt.Errorf("invalid preview id %q: must be lowercase alphanumeric or '-', 1-63 chars, start/end with alphanumeric", trimmed)
+			return "", fmt.Errorf("invalid preview id %q: must be lowercase alphanumeric or '-', 1-63 chars, start/end with alphanumeric", trimmed)
 		}
-		return ensurePrefix(trimmed), false, nil
+		return ensurePrefix(trimmed), nil
 	}
 
 	folderName := filepath.Base(workingDir)
@@ -26,9 +26,14 @@ func ResolvePreviewID(inputID string, workingDir string) (id string, generated b
 		base = "preview"
 	}
 
+	branchPart := SanitizeResourceName(branch)
+	if branchPart != "" {
+		base = base + "-" + branchPart
+	}
+
 	suffix, err := randomNumericSuffix(8)
 	if err != nil {
-		return "", false, fmt.Errorf("failed to generate preview id: %w", err)
+		return "", fmt.Errorf("failed to generate preview id: %w", err)
 	}
 
 	maxBaseLen := 63 - 1 - len(suffix)
@@ -44,10 +49,10 @@ func ResolvePreviewID(inputID string, workingDir string) (id string, generated b
 
 	id = base + "-" + suffix
 	if !IsValidResourceName(id) {
-		return "", false, fmt.Errorf("failed to generate valid preview id")
+		return "", fmt.Errorf("failed to generate valid preview id")
 	}
 
-	return ensurePrefix(id), true, nil
+	return ensurePrefix(id), nil
 }
 
 // IsValidResourceName checks whether value is valid for a Docker network name

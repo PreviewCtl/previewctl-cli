@@ -1,12 +1,18 @@
 package cmd
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
+	"github.com/previewctl/previewctl-cli/internal/identity"
+	"github.com/previewctl/previewctl-cli/internal/store"
+	"github.com/previewctl/previewctl-cli/internal/store/database"
 	"github.com/previewctl/previewctl-cli/internal/up"
-	"github.com/previewctl/previewctl-cli/pkg/identity"
 	"github.com/previewctl/previewctl-cli/pkg/secrets"
 	"github.com/previewctl/previewctl-cli/pkg/validator"
 	"github.com/spf13/cobra"
@@ -34,12 +40,11 @@ required dependency order.`,
 			return fmt.Errorf("failed to get working directory: %w", err)
 		}
 
-		resolvedPreviewID, generated, err := identity.ResolvePreviewID(previewID, workingDir)
+		branch, err := currentGitBranch(workingDir)
 		if err != nil {
-			return err
-		}
-		if generated {
-			fmt.Println("generated preview id:", resolvedPreviewID)
+			fmt.Printf("failed to determine git branch: %v\n", err)
+			fmt.Println("using default branch name: main")
+			branch = "main"
 		}
 
 		config, err := validator.LoadAndValidateConfig(workingDir)
@@ -47,29 +52,101 @@ required dependency order.`,
 			return err
 		}
 
-		envFilePath := envFile
-		if envFilePath == "" {
-			envFilePath = filepath.Join(workingDir, ".env")
-		}
-
-		envSecrets, err := secrets.ParseEnvFile(envFilePath)
+		secrets, err := getSecrets(workingDir)
 		if err != nil {
 			return err
 		}
 
-		flagSecrets, err := secrets.ParseKeyValues(secretInputs)
+		envStore := database.NewPreviewEnvironmentStore(DB)
+
+		previewEnvName, err := resolvePreviewEnv(cmd.Context(), envStore, workingDir, branch)
+		if err != nil {
+			return err
+		}
+		previewEnv, err := updatePreviewEnvPre(cmd.Context(), envStore, previewEnvName, workingDir, branch)
 		if err != nil {
 			return err
 		}
 
-		merged := secrets.Merge(secrets.ParseOSEnv(), envSecrets, flagSecrets)
-
-		if err := up.HandleUp(cmd.Context(), resolvedPreviewID, config, merged, workingDir); err != nil {
+		if err := up.HandleUp(cmd.Context(), previewEnvName, config, secrets, workingDir); err != nil {
 			return err
+		}
+
+		if err := envStore.UpdateStatus(cmd.Context(), previewEnv.ID, "active"); err != nil {
+			return fmt.Errorf("failed to update preview environment status: %w", err)
 		}
 
 		return nil
 	},
+}
+
+// currentGitBranch returns the current branch name for the given directory.
+func currentGitBranch(dir string) (string, error) {
+	gitCmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
+	gitCmd.Dir = dir
+	out, err := gitCmd.Output()
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(out)), nil
+}
+
+// getSecrets returns all the secrets from secret input, env file and os environments
+func getSecrets(workingDir string) (map[string]string, error) {
+	if envFile == "" {
+		envFile = filepath.Join(workingDir, ".env")
+	}
+
+	envSecrets, err := secrets.ParseEnvFile(envFile)
+	if err != nil {
+		return nil, err
+	}
+
+	flagSecrets, err := secrets.ParseKeyValues(secretInputs)
+	if err != nil {
+		return nil, err
+	}
+
+	return secrets.Merge(secrets.ParseOSEnv(), envSecrets, flagSecrets), err
+}
+
+// resovlve Preview env
+func resolvePreviewEnv(ctx context.Context, envStore *database.PreviewEnvironmentStore, workingDir string, branch string) (string, error) {
+	if strings.TrimSpace(previewID) != "" {
+		return identity.ResolvePreviewID(previewID, workingDir, branch)
+	}
+
+	previews, err := envStore.FindByWorkspaceAndBranch(ctx, workingDir, branch)
+	if err != nil {
+		return "", err
+	}
+	return previews.Name, nil
+}
+
+// updatePreviewEnvPre
+func updatePreviewEnvPre(ctx context.Context, envStore *database.PreviewEnvironmentStore, previewEnvName string, workingDir string, branch string) (*store.PreviewEnvironment, error) {
+	existing, err := envStore.FindByName(ctx, previewEnvName)
+	if err != nil {
+		if errors.Is(store.ErrResourceNotFound, err) {
+			created, err := envStore.Create(ctx, &store.PreviewEnvironment{
+				Name:      previewEnvName,
+				Workspace: workingDir,
+				Branch:    branch,
+				Status:    "deploying",
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to store preview environment: %w", err)
+			}
+			return created, nil
+		} else {
+			return nil, err
+		}
+	}
+
+	if err := envStore.UpdateStatus(ctx, existing.ID, "deploying"); err != nil {
+		return nil, fmt.Errorf("failed to update preview environment status: %w", err)
+	}
+	return existing, nil
 }
 
 func init() {

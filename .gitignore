@@ -34,3 +34,4 @@ main
 previewctl-cli
 # PreviewCtrl volume data
 .previewctrl/data/
+.devdbrc
