@@ -17,13 +17,16 @@ var DB *sqlx.DB
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "previewctl",
-	Short: "PreviewCtrl cli",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "Spin up ephemeral preview environments with Docker",
+	Long: `PreviewCtrl is a CLI tool for creating and managing ephemeral
+preview environments locally using Docker.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+Define your services, builds, and dependencies in a .previewctrl/preview.yml
+config file and bring them up with a single command.
+
+  previewctl init        Scaffold a new .previewctrl/ config directory
+  previewctl validate    Validate your preview.yml configuration
+  previewctl up          Build and deploy all services locally`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		datasource, err := database.DefaultDatasource()
 		if err != nil {
