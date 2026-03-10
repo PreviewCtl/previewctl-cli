@@ -18,8 +18,9 @@ import (
 // RunService creates and starts a container for the given service.
 // The container is named "{networkName}-{serviceName}" and attached to the
 // specified Docker network with serviceName as a network alias for DNS resolution.
+// If preferredHostPort > 0, the container will attempt to bind to that host port.
 // It returns the container ID and the dynamically assigned host port (0 if no port exposed).
-func RunService(ctx context.Context, cli *client.Client, networkName, serviceName string, svc types.ServiceConfig, workingDir string) (string, int, error) {
+func RunService(ctx context.Context, cli *client.Client, networkName, serviceName string, svc types.ServiceConfig, secrets map[string]string, preferredHostPort int, workingDir string) (string, int, error) {
 	containerName := networkName + "-" + serviceName
 
 	// Stop and remove existing container if present (idempotent re-runs)
@@ -28,8 +29,11 @@ func RunService(ctx context.Context, cli *client.Client, networkName, serviceNam
 		_, _ = cli.ContainerRemove(ctx, containerName, client.ContainerRemoveOptions{})
 	}
 
-	// Build env slice
-	env := make([]string, 0, len(svc.Env))
+	// Build env slice: secrets first, then config env (config overrides secrets)
+	env := make([]string, 0, len(secrets)+len(svc.Env))
+	for k, v := range secrets {
+		env = append(env, k+"="+v)
+	}
 	for k, v := range svc.Env {
 		env = append(env, k+"="+v)
 	}
@@ -54,9 +58,13 @@ func RunService(ctx context.Context, cli *client.Client, networkName, serviceNam
 		containerConfig.ExposedPorts = network.PortSet{
 			port: struct{}{},
 		}
+		bindPort := "0"
+		if preferredHostPort > 0 {
+			bindPort = strconv.Itoa(preferredHostPort)
+		}
 		hostConfig.PortBindings = network.PortMap{
 			port: []network.PortBinding{
-				{HostIP: netip.IPv4Unspecified(), HostPort: "0"},
+				{HostIP: netip.IPv4Unspecified(), HostPort: bindPort},
 			},
 		}
 	}

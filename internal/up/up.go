@@ -4,13 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/previewctl/previewctl-cli/internal/store"
+	"github.com/previewctl/previewctl-cli/internal/store/database"
 	"github.com/previewctl/previewctl-cli/pkg/deployment"
 	"github.com/previewctl/previewctl-cli/pkg/docker"
 	"github.com/previewctl/previewctl-cli/pkg/resolver"
 	"github.com/previewctl/previewctl-cli/pkg/types"
 )
 
-func HandleUp(ctx context.Context, previewID string, config types.PreviewConfig, secrets map[string]string, workingDir string) error {
+func HandleUp(ctx context.Context, previewID string, previewEnvID string, config types.PreviewConfig, secrets map[string]string, userSecrets map[string]string, portStore *database.PortMappingStore, workingDir string) error {
 	resolvedConfig, err := resolver.ResolveConfig(config, previewID, secrets)
 	if err != nil {
 		return fmt.Errorf("failed to resolve config variables: %w", err)
@@ -33,6 +35,16 @@ func HandleUp(ctx context.Context, previewID string, config types.PreviewConfig,
 		return err
 	}
 
+	// Load existing port mappings for this preview environment
+	savedPorts, err := portStore.FindByPreviewEnv(ctx, previewEnvID)
+	if err != nil {
+		return fmt.Errorf("failed to load port mappings: %w", err)
+	}
+	portLookup := make(map[string]int, len(savedPorts))
+	for _, pm := range savedPorts {
+		portLookup[pm.ServiceName] = pm.HostPort
+	}
+
 	type portMapping struct {
 		service       string
 		containerPort int
@@ -44,11 +56,21 @@ func HandleUp(ctx context.Context, previewID string, config types.PreviewConfig,
 		svc := resolvedConfig.Services[serviceName]
 		fmt.Printf("deploying %s...\n", serviceName)
 
-		if err := docker.EnsureImage(ctx, cli, svc.Image); err != nil {
-			return fmt.Errorf("service %q: %w", serviceName, err)
+		if svc.Build != nil {
+			imageTag := previewID + "-" + serviceName + ":latest"
+			if err := docker.BuildImage(ctx, imageTag, *svc.Build, userSecrets, workingDir); err != nil {
+				return fmt.Errorf("service %q: %w", serviceName, err)
+			}
+			svc.Image = imageTag
+		} else {
+			if err := docker.EnsureImage(ctx, cli, svc.Image); err != nil {
+				return fmt.Errorf("service %q: %w", serviceName, err)
+			}
 		}
 
-		containerID, hostPort, err := docker.RunService(ctx, cli, previewID, serviceName, svc, workingDir)
+		preferredPort := portLookup[serviceName]
+
+		containerID, hostPort, err := docker.RunService(ctx, cli, previewID, serviceName, svc, userSecrets, preferredPort, workingDir)
 		if err != nil {
 			return fmt.Errorf("service %q: %w", serviceName, err)
 		}
@@ -61,6 +83,16 @@ func HandleUp(ctx context.Context, previewID string, config types.PreviewConfig,
 				containerPort: svc.Port,
 				hostPort:      hostPort,
 			})
+
+			// Persist the port mapping
+			if err := portStore.Upsert(ctx, &store.PortMapping{
+				PreviewEnvID:  previewEnvID,
+				ServiceName:   serviceName,
+				ContainerPort: svc.Port,
+				HostPort:      hostPort,
+			}); err != nil {
+				return fmt.Errorf("failed to save port mapping for %s: %w", serviceName, err)
+			}
 		}
 	}
 

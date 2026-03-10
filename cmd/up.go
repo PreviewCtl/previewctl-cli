@@ -52,12 +52,13 @@ required dependency order.`,
 			return err
 		}
 
-		secrets, err := getSecrets(workingDir)
+		resolutionSecrets, userSecrets, err := getSecrets(workingDir)
 		if err != nil {
 			return err
 		}
 
 		envStore := database.NewPreviewEnvironmentStore(DB)
+		portStore := database.NewPortMappingStore(DB)
 
 		previewEnvName, err := resolvePreviewEnv(cmd.Context(), envStore, workingDir, branch)
 		if err != nil {
@@ -68,7 +69,7 @@ required dependency order.`,
 			return err
 		}
 
-		if err := up.HandleUp(cmd.Context(), previewEnvName, config, secrets, workingDir); err != nil {
+		if err := up.HandleUp(cmd.Context(), previewEnvName, previewEnv.ID, config, resolutionSecrets, userSecrets, portStore, workingDir); err != nil {
 			return err
 		}
 
@@ -91,23 +92,28 @@ func currentGitBranch(dir string) (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
-// getSecrets returns all the secrets from secret input, env file and os environments
-func getSecrets(workingDir string) (map[string]string, error) {
+// getSecrets returns two maps:
+//   - resolutionSecrets: OS env + .env + flags (for resolving ${secrets.X} in config)
+//   - userSecrets: .env + flags only (for injecting into containers and builds)
+func getSecrets(workingDir string) (map[string]string, map[string]string, error) {
 	if envFile == "" {
 		envFile = filepath.Join(workingDir, ".env")
 	}
 
 	envSecrets, err := secrets.ParseEnvFile(envFile)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	flagSecrets, err := secrets.ParseKeyValues(secretInputs)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return secrets.Merge(secrets.ParseOSEnv(), envSecrets, flagSecrets), err
+	userSecrets := secrets.Merge(envSecrets, flagSecrets)
+	resolutionSecrets := secrets.Merge(secrets.ParseOSEnv(), userSecrets)
+
+	return resolutionSecrets, userSecrets, nil
 }
 
 // resovlve Preview env
