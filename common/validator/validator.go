@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/previewctl/previewctl-cli/pkg/constants"
-	"github.com/previewctl/previewctl-cli/pkg/dag"
-	"github.com/previewctl/previewctl-cli/pkg/types"
+	"github.com/previewctl/previewctl-cli/common/constants"
+	"github.com/previewctl/previewctl-cli/common/dag"
+	"github.com/previewctl/previewctl-cli/common/types"
 	"gopkg.in/yaml.v3"
 )
 

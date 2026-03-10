@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/previewctl/previewctl-cli/pkg/dag"
-	"github.com/previewctl/previewctl-cli/pkg/deployment"
-	"github.com/previewctl/previewctl-cli/pkg/types"
+	"github.com/previewctl/previewctl-cli/common/dag"
+	"github.com/previewctl/previewctl-cli/common/deployment"
+	"github.com/previewctl/previewctl-cli/common/types"
 )
 
 var (

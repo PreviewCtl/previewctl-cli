@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/previewctl/previewctl-cli/pkg/types"
+	"github.com/previewctl/previewctl-cli/common/types"
 )
 
 // NixpacksBuild builds a Docker image using the Nixpacks CLI.

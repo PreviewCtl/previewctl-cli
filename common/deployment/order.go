@@ -3,8 +3,8 @@ package deployment
 import (
 	"fmt"
 
-	"github.com/previewctl/previewctl-cli/pkg/dag"
-	"github.com/previewctl/previewctl-cli/pkg/types"
+	"github.com/previewctl/previewctl-cli/common/dag"
+	"github.com/previewctl/previewctl-cli/common/types"
 )
 
 // ResolveServiceDeploymentOrderFromConfig returns service deployment order from a validated config.

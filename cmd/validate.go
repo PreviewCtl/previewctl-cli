@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/previewctl/previewctl-cli/pkg/validator"
+	"github.com/previewctl/previewctl-cli/common/validator"
 	"github.com/spf13/cobra"
 )
 

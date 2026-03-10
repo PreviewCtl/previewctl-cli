@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/moby/moby/client"
-	"github.com/previewctl/previewctl-cli/pkg/types"
+	"github.com/previewctl/previewctl-cli/common/types"
 )
 
 // EnsureImage pulls the image if it is not already present locally.

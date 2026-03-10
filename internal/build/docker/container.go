@@ -11,8 +11,8 @@ import (
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/api/types/network"
 	"github.com/moby/moby/client"
-	"github.com/previewctl/previewctl-cli/pkg/constants"
-	"github.com/previewctl/previewctl-cli/pkg/types"
+	"github.com/previewctl/previewctl-cli/common/constants"
+	"github.com/previewctl/previewctl-cli/common/types"
 )
 
 // StopAndRemoveContainersByNetwork stops and removes all containers attached to

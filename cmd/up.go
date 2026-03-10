@@ -8,12 +8,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/previewctl/previewctl-cli/common/secrets"
+	"github.com/previewctl/previewctl-cli/common/validator"
 	"github.com/previewctl/previewctl-cli/internal/identity"
 	"github.com/previewctl/previewctl-cli/internal/store"
 	"github.com/previewctl/previewctl-cli/internal/store/database"
 	"github.com/previewctl/previewctl-cli/internal/up"
-	"github.com/previewctl/previewctl-cli/pkg/secrets"
-	"github.com/previewctl/previewctl-cli/pkg/validator"
 	"github.com/spf13/cobra"
 )
 
