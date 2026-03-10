@@ -7,8 +7,8 @@ services:
   frontend:
     build:
       type: dockerfile
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
     port: 3000
     env:
       API_URL: http://${services.api.host}:${services.api.port}
@@ -18,7 +18,7 @@ services:
 
   api:
     build:
-      type: nixpacks
+      type: railack
       context: ./api
     port: 8080
     env:
@@ -35,9 +35,8 @@ services:
 
   worker:
     build:
-      type: dockerfile
+      type: nixpacks
       context: ./worker
-      dockerfile: Dockerfile
     env:
       REDIS_HOST: ${services.redis.host}
       REDIS_PORT: ${services.redis.port}

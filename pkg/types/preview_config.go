@@ -20,6 +20,12 @@ type ServiceConfig struct {
 	DependsOn []string          `yaml:"depends_on,omitempty"`
 }
 
+const (
+	BuildTypeDockerfile = "dockerfile"
+	BuildTypeNixpacks   = "nixpacks"
+	BuildTypeRailpack   = "railpack"
+)
+
 type BuildConfig struct {
 	Type       string `yaml:"type"`
 	Context    string `yaml:"context"`

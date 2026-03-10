@@ -58,8 +58,21 @@ func HandleUp(ctx context.Context, previewID string, previewEnvID string, config
 
 		if svc.Build != nil {
 			imageTag := previewID + "-" + serviceName + ":latest"
-			if err := docker.BuildImage(ctx, imageTag, *svc.Build, userSecrets, workingDir); err != nil {
-				return fmt.Errorf("service %q: %w", serviceName, err)
+			switch svc.Build.Type {
+			case types.BuildTypeDockerfile:
+				if err := docker.BuildImage(ctx, imageTag, *svc.Build, userSecrets, workingDir); err != nil {
+					return fmt.Errorf("service %q: %w", serviceName, err)
+				}
+			case types.BuildTypeNixpacks:
+				if err := docker.NixpacksBuild(ctx, imageTag, *svc.Build, userSecrets, workingDir); err != nil {
+					return fmt.Errorf("service %q: %w", serviceName, err)
+				}
+			case types.BuildTypeRailpack:
+				if err := docker.RailpackBuild(ctx, imageTag, *svc.Build, userSecrets, workingDir); err != nil {
+					return fmt.Errorf("service %q: %w", serviceName, err)
+				}
+			default:
+				return fmt.Errorf("service %q: unsupported build type %q", serviceName, svc.Build.Type)
 			}
 			svc.Image = imageTag
 		} else {

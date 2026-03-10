@@ -53,9 +53,9 @@ func ValidateConfig(config types.PreviewConfig) error {
 
 	serviceGraph := dag.NewGraph[string]()
 
-	var generateExpr = regexp.MustCompile(`\$\{Generate\((\d+)\)\}`)
-	var templateVar = regexp.MustCompile(`\$\{([^}]+)\}`)
-	var serviceEnvRef = regexp.MustCompile(`^services\.([^.]+)\.env\.(.+)$`)
+	generateExpr := regexp.MustCompile(`\$\{Generate\((\d+)\)\}`)
+	templateVar := regexp.MustCompile(`\$\{([^}]+)\}`)
+	serviceEnvRef := regexp.MustCompile(`^services\.([^.]+)\.env\.(.+)$`)
 	const maxGenerateLength = 100
 
 	for serviceName, service := range config.Services {
@@ -71,6 +71,12 @@ func ValidateConfig(config types.PreviewConfig) error {
 		if hasBuild {
 			if strings.TrimSpace(service.Build.Type) == "" {
 				return fmt.Errorf("services.%s.build.type is required", serviceName)
+			}
+			switch service.Build.Type {
+			case types.BuildTypeDockerfile, types.BuildTypeNixpacks, types.BuildTypeRailpack:
+				// valid
+			default:
+				return fmt.Errorf("services.%s.build.type: unsupported build type %q (must be %q, %q, or %q)", serviceName, service.Build.Type, types.BuildTypeDockerfile, types.BuildTypeNixpacks, types.BuildTypeRailpack)
 			}
 			if strings.TrimSpace(service.Build.Context) == "" {
 				return fmt.Errorf("services.%s.build.context is required", serviceName)
