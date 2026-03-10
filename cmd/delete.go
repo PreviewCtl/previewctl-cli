@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/previewctl/previewctl-cli/internal/build/docker"
 	"github.com/previewctl/previewctl-cli/internal/store"
 	"github.com/previewctl/previewctl-cli/internal/store/database"
-	"github.com/previewctl/previewctl-cli/pkg/docker"
 	"github.com/spf13/cobra"
 )
 

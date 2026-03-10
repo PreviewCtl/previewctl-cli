@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/previewctl/previewctl-cli/internal/build/docker"
+	"github.com/previewctl/previewctl-cli/internal/build/nixpacks"
+	"github.com/previewctl/previewctl-cli/internal/build/railpack"
 	"github.com/previewctl/previewctl-cli/internal/store"
 	"github.com/previewctl/previewctl-cli/internal/store/database"
 	"github.com/previewctl/previewctl-cli/pkg/deployment"
-	"github.com/previewctl/previewctl-cli/pkg/docker"
 	"github.com/previewctl/previewctl-cli/pkg/resolver"
 	"github.com/previewctl/previewctl-cli/pkg/types"
 )
@@ -64,11 +66,11 @@ func HandleUp(ctx context.Context, previewID string, previewEnvID string, config
 					return fmt.Errorf("service %q: %w", serviceName, err)
 				}
 			case types.BuildTypeNixpacks:
-				if err := docker.NixpacksBuild(ctx, imageTag, *svc.Build, userSecrets, workingDir); err != nil {
+				if err := nixpacks.NixpacksBuild(ctx, imageTag, *svc.Build, userSecrets, workingDir); err != nil {
 					return fmt.Errorf("service %q: %w", serviceName, err)
 				}
 			case types.BuildTypeRailpack:
-				if err := docker.RailpackBuild(ctx, imageTag, *svc.Build, userSecrets, workingDir); err != nil {
+				if err := railpack.RailpackBuild(ctx, imageTag, *svc.Build, userSecrets, workingDir); err != nil {
 					return fmt.Errorf("service %q: %w", serviceName, err)
 				}
 			default:
