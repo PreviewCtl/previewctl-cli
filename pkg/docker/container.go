@@ -15,6 +15,47 @@ import (
 	"github.com/previewctl/previewctl-cli/pkg/types"
 )
 
+// StopAndRemoveContainersByNetwork stops and removes all containers attached to
+// the given Docker network. Returns the names of removed containers.
+func StopAndRemoveContainersByNetwork(ctx context.Context, cli *client.Client, networkName string) ([]string, error) {
+	result, err := cli.ContainerList(ctx, client.ContainerListOptions{
+		All:     true,
+		Filters: client.Filters{}.Add("network", networkName),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list containers for network %q: %w", networkName, err)
+	}
+
+	var removed []string
+	for _, c := range result.Items {
+		_, _ = cli.ContainerStop(ctx, c.ID, client.ContainerStopOptions{})
+		if _, err := cli.ContainerRemove(ctx, c.ID, client.ContainerRemoveOptions{}); err != nil {
+			return removed, fmt.Errorf("failed to remove container %s: %w", c.ID[:12], err)
+		}
+		name := c.ID[:12]
+		if len(c.Names) > 0 {
+			name = strings.TrimPrefix(c.Names[0], "/")
+		}
+		removed = append(removed, name)
+	}
+
+	return removed, nil
+}
+
+// StopAndRemoveContainer stops and removes a container by name. It is a no-op
+// if the container does not exist.
+func StopAndRemoveContainer(ctx context.Context, cli *client.Client, containerName string) error {
+	if _, err := cli.ContainerInspect(ctx, containerName, client.ContainerInspectOptions{}); err != nil {
+		return nil // container doesn't exist
+	}
+	_, _ = cli.ContainerStop(ctx, containerName, client.ContainerStopOptions{})
+	_, err := cli.ContainerRemove(ctx, containerName, client.ContainerRemoveOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to remove container %q: %w", containerName, err)
+	}
+	return nil
+}
+
 // RunService creates and starts a container for the given service.
 // The container is named "{networkName}-{serviceName}" and attached to the
 // specified Docker network with serviceName as a network alias for DNS resolution.

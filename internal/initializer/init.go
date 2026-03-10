@@ -10,16 +10,11 @@ import (
 	"github.com/previewctl/previewctl-cli/pkg/yaml"
 )
 
-func InitRepo() error {
-	workingDir, err := os.Getwd()
-	if err != nil {
-		return errors.Errorf("failed to get working directory: %w", err)
-	}
-
+func InitRepo(workingDir string) error {
 	previewCtrlConfigDirPath := constants.PreviewCtrlConfigDirPath(workingDir)
 	previewCtrlConfigFilePath := constants.PreviewCtrlConfigFilePath(workingDir)
 
-	err = os.MkdirAll(previewCtrlConfigDirPath, os.ModePerm)
+	err := os.MkdirAll(previewCtrlConfigDirPath, os.ModePerm)
 	if err != nil {
 		return errors.Errorf("failed to initialized PreviewCtrl directory: %w", err)
 	}

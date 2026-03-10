@@ -17,5 +17,6 @@ func DefaultDatasource() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to determine home directory: %w", err)
 	}
+	fmt.Printf("Database location: %s\n", home)
 	return filepath.Join(home, ".previewctl", "data", "previewctl.db"), nil
 }

@@ -40,6 +40,23 @@ func (s *PortMappingStore) FindByPreviewEnv(ctx context.Context, previewEnvID st
 	return mappings, nil
 }
 
+// DeleteByPreviewEnv removes all port mappings for a given preview environment.
+func (s *PortMappingStore) DeleteByPreviewEnv(ctx context.Context, previewEnvID string) error {
+	query, args, err := Builder.
+		Delete("port_mappings").
+		Where(squirrel.Eq{"preview_env_id": previewEnvID}).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to build delete query: %w", err)
+	}
+
+	if _, err := s.db.ExecContext(ctx, query, args...); err != nil {
+		return processSQLErrorf(ctx, err, "failed to delete port mappings for preview env %s", previewEnvID)
+	}
+
+	return nil
+}
+
 // Upsert inserts or updates a port mapping for a service.
 func (s *PortMappingStore) Upsert(ctx context.Context, mapping *store.PortMapping) error {
 	now := time.Now().Unix()

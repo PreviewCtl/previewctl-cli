@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -35,11 +34,6 @@ The up command will build services (for example Dockerfile and Nixpacks
 builds), create the runtime network, and deploy all configured services in the
 required dependency order.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		workingDir, err := os.Getwd()
-		if err != nil {
-			return fmt.Errorf("failed to get working directory: %w", err)
-		}
-
 		branch, err := currentGitBranch(workingDir)
 		if err != nil {
 			fmt.Printf("failed to determine git branch: %v\n", err)
@@ -52,7 +46,7 @@ required dependency order.`,
 			return err
 		}
 
-		resolutionSecrets, userSecrets, err := getSecrets(workingDir)
+		resolutionSecrets, userSecrets, err := getSecrets()
 		if err != nil {
 			return err
 		}
@@ -60,11 +54,11 @@ required dependency order.`,
 		envStore := database.NewPreviewEnvironmentStore(DB)
 		portStore := database.NewPortMappingStore(DB)
 
-		previewEnvName, err := resolvePreviewEnv(cmd.Context(), envStore, workingDir, branch)
+		previewEnvName, err := resolvePreviewEnv(cmd.Context(), envStore, branch)
 		if err != nil {
 			return err
 		}
-		previewEnv, err := updatePreviewEnvPre(cmd.Context(), envStore, previewEnvName, workingDir, branch)
+		previewEnv, err := updatePreviewEnvPre(cmd.Context(), envStore, previewEnvName, branch)
 		if err != nil {
 			return err
 		}
@@ -95,7 +89,7 @@ func currentGitBranch(dir string) (string, error) {
 // getSecrets returns two maps:
 //   - resolutionSecrets: OS env + .env + flags (for resolving ${secrets.X} in config)
 //   - userSecrets: .env + flags only (for injecting into containers and builds)
-func getSecrets(workingDir string) (map[string]string, map[string]string, error) {
+func getSecrets() (map[string]string, map[string]string, error) {
 	if envFile == "" {
 		envFile = filepath.Join(workingDir, ".env")
 	}
@@ -117,20 +111,23 @@ func getSecrets(workingDir string) (map[string]string, map[string]string, error)
 }
 
 // resovlve Preview env
-func resolvePreviewEnv(ctx context.Context, envStore *database.PreviewEnvironmentStore, workingDir string, branch string) (string, error) {
+func resolvePreviewEnv(ctx context.Context, envStore *database.PreviewEnvironmentStore, branch string) (string, error) {
 	if strings.TrimSpace(previewID) != "" {
 		return identity.ResolvePreviewID(previewID, workingDir, branch)
 	}
 
 	previews, err := envStore.FindByWorkspaceAndBranch(ctx, workingDir, branch)
-	if err != nil {
+	if err != nil && !errors.Is(store.ErrResourceNotFound, err) {
 		return "", err
 	}
-	return previews.Name, nil
+	if previews != nil {
+		return previews.Name, nil
+	}
+	return identity.ResolvePreviewID(previewID, workingDir, branch)
 }
 
 // updatePreviewEnvPre
-func updatePreviewEnvPre(ctx context.Context, envStore *database.PreviewEnvironmentStore, previewEnvName string, workingDir string, branch string) (*store.PreviewEnvironment, error) {
+func updatePreviewEnvPre(ctx context.Context, envStore *database.PreviewEnvironmentStore, previewEnvName string, branch string) (*store.PreviewEnvironment, error) {
 	existing, err := envStore.FindByName(ctx, previewEnvName)
 	if err != nil {
 		if errors.Is(store.ErrResourceNotFound, err) {

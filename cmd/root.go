@@ -14,6 +14,8 @@ import (
 // DB is the global database handle, available to all subcommands.
 var DB *sqlx.DB
 
+var workingDir string
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "previewctl",
@@ -39,6 +41,12 @@ config file and bring them up with a single command.`,
 		}
 
 		DB = db
+
+		workingDirectory, err := os.Getwd()
+		if err != nil {
+			return fmt.Errorf("failed to get working directory: %w", err)
+		}
+		workingDir = workingDirectory
 		return nil
 	},
 }

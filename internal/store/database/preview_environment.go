@@ -163,6 +163,26 @@ func (s *PreviewEnvironmentStore) List(ctx context.Context) ([]*store.PreviewEnv
 	return envs, nil
 }
 
+// ListByWorkspace returns all preview environments for a given workspace.
+func (s *PreviewEnvironmentStore) ListByWorkspace(ctx context.Context, workspace string) ([]*store.PreviewEnvironment, error) {
+	query, args, err := Builder.
+		Select("id", "name", "workspace", "branch", "status", "created_at", "updated_at").
+		From("preview_environments").
+		Where(squirrel.Eq{"workspace": workspace}).
+		OrderBy("created_at DESC").
+		ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build select query: %w", err)
+	}
+
+	var envs []*store.PreviewEnvironment
+	if err := s.db.SelectContext(ctx, &envs, query, args...); err != nil {
+		return nil, processSQLErrorf(ctx, err, "failed to list preview environments for workspace %s", workspace)
+	}
+
+	return envs, nil
+}
+
 // Update updates an existing preview environment.
 func (s *PreviewEnvironmentStore) Update(ctx context.Context, env *store.PreviewEnvironment) error {
 	env.UpdatedAt = time.Now().Unix()

@@ -18,6 +18,7 @@ type PreviewEnvironmentStore interface {
 	FindByWorkspace(ctx context.Context, workspace string) (*PreviewEnvironment, error)
 	FindByWorkspaceAndBranch(ctx context.Context, workspace string, branch string) (*PreviewEnvironment, error)
 	List(ctx context.Context) ([]*PreviewEnvironment, error)
+	ListByWorkspace(ctx context.Context, workspace string) ([]*PreviewEnvironment, error)
 	Update(ctx context.Context, env *PreviewEnvironment) error
 	UpdateStatus(ctx context.Context, id string, status string) error
 	Delete(ctx context.Context, id string) error
