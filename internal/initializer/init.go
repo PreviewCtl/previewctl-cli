@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/go-errors/errors"
-	"github.com/previewctl/previewctl-cli/common/constants"
-	"github.com/previewctl/previewctl-cli/common/yaml"
+	"github.com/previewctl/previewctl-core/constants"
+	"github.com/previewctl/previewctl-core/yaml"
 )
 
 func InitRepo(workingDir string) error {

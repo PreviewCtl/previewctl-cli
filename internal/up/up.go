@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/previewctl/previewctl-cli/common/deployment"
-	"github.com/previewctl/previewctl-cli/common/resolver"
-	"github.com/previewctl/previewctl-cli/common/types"
 	"github.com/previewctl/previewctl-cli/internal/build/docker"
 	"github.com/previewctl/previewctl-cli/internal/build/nixpacks"
 	"github.com/previewctl/previewctl-cli/internal/build/railpack"
 	"github.com/previewctl/previewctl-cli/internal/store"
 	"github.com/previewctl/previewctl-cli/internal/store/database"
+	"github.com/previewctl/previewctl-core/deployment"
+	"github.com/previewctl/previewctl-core/resolver"
+	"github.com/previewctl/previewctl-core/types"
 )
 
 func HandleUp(ctx context.Context, previewID string, previewEnvID string, config types.PreviewConfig, secrets map[string]string, userSecrets map[string]string, portStore *database.PortMappingStore, workingDir string) error {
