@@ -1,5 +1,10 @@
 /* ===== Landing page styles ===== */
 
+/* Navbar logo spacing */
+.site-title {
+    gap: 0.5rem;
+}
+
 /* Hero */
 .hero {
     text-align: center;

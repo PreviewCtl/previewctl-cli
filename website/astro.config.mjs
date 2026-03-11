@@ -5,7 +5,10 @@ export default defineConfig({
     site: "https://previewctl.dev",
     integrations: [
         starlight({
-            title: "PreviewCtl",
+            title: "PreviewCTL",
+            logo: {
+                src: "./src/assets/logo.png",
+            },
             description:
                 "Spin up ephemeral preview environments with Docker — one YAML, one command.",
             social: [
