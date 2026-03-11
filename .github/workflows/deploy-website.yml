@@ -1,10 +1,6 @@
 name: Deploy Website to GitHub Pages
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "website/**"
   workflow_dispatch:
 
 permissions:
@@ -22,6 +18,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+
+      - name: Remove lockfile for cross-platform compatibility
+        run: rm -f ./website/package-lock.json
 
       - name: Install, build, and upload site
         uses: withastro/action@v5
