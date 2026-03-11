@@ -14,9 +14,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// LoadAndValidateConfig reads and validates .previewctrl/preview.yml from workingDir.
+// LoadAndValidateConfig reads and validates .previewctl/preview.yml from workingDir.
 func LoadAndValidateConfig(workingDir string) (types.PreviewConfig, error) {
-	configPath := constants.PreviewCtrlConfigFilePath(workingDir)
+	configPath := constants.PreviewCtlConfigFilePath(workingDir)
 	rawConfig, err := os.ReadFile(configPath)
 	if err != nil {
 		return types.PreviewConfig{}, fmt.Errorf("failed to read config file at %s: %w", configPath, err)

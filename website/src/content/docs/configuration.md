@@ -1,9 +1,9 @@
 ---
 title: Configuration
-description: Full reference for .previewctrl/preview.yml.
+description: Full reference for .previewctl/preview.yml.
 ---
 
-PreviewCtl is configured via a `.previewctrl/preview.yml` file at the root of your project. This page documents every available option.
+PreviewCtl is configured via a `.previewctl/preview.yml` file at the root of your project. This page documents every available option.
 
 ## Full example
 

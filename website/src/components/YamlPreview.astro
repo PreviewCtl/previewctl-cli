@@ -45,14 +45,14 @@ services:
     <div class="yaml-text">
       <h2>Your entire stack in one file</h2>
       <p>
-        A single <code>.previewctrl/preview.yml</code> describes your services,
+        A single <code>.previewctl/preview.yml</code> describes your services,
         builds, dependencies, and environment variables. Run
         <code>previewctl up</code> and everything comes alive.
       </p>
       <ul class="yaml-highlights">
-        <li>Service-to-service references with <code>${`\${services.*}`}</code> templating</li>
-        <li>Auto-generated passwords with <code>${`\${Generate(16)}`}</code></li>
-        <li>External secrets via <code>${`\${secrets.*}`}</code></li>
+        <li>Service-to-service references with <code>{`\${services.*}`}</code> templating</li>
+        <li>Auto-generated passwords with <code>{`\${Generate(16)}`}</code></li>
+        <li>External secrets via <code>{`\${secrets.*}`}</code></li>
         <li>Dependency ordering with <code>depends_on</code></li>
       </ul>
     </div>

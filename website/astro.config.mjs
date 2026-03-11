@@ -5,14 +5,14 @@ export default defineConfig({
     site: "https://previewctl.dev",
     integrations: [
         starlight({
-            title: "PreviewCtrl",
+            title: "PreviewCtl",
             description:
                 "Spin up ephemeral preview environments with Docker — one YAML, one command.",
             social: [
                 {
                     icon: "github",
                     label: "GitHub",
-                    href: "https://github.com/previewctrl/previewctl-cli",
+                    href: "https://github.com/previewctl/previewctl-cli",
                 },
             ],
             customCss: ["./src/styles/landing.css"],
@@ -25,10 +25,10 @@ export default defineConfig({
                     label: "Commands",
                     items: [
                         { label: "init", slug: "commands/init" },
+                        { label: "validate", slug: "commands/validate" },
                         { label: "up", slug: "commands/up" },
                         { label: "list", slug: "commands/list" },
                         { label: "delete", slug: "commands/delete" },
-                        { label: "validate", slug: "commands/validate" },
                     ],
                 },
                 {

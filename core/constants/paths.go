@@ -2,10 +2,10 @@ package constants
 
 import "path/filepath"
 
-func PreviewCtrlConfigDirPath(workingDir string) string {
-	return filepath.Join(workingDir, PreviewCtrlConfigDir)
+func PreviewCtlConfigDirPath(workingDir string) string {
+	return filepath.Join(workingDir, PreviewCtlConfigDir)
 }
 
-func PreviewCtrlConfigFilePath(workingDir string) string {
-	return filepath.Join(PreviewCtrlConfigDirPath(workingDir), PreviewCtrlConfigFile)
+func PreviewCtlConfigFilePath(workingDir string) string {
+	return filepath.Join(PreviewCtlConfigDirPath(workingDir), PreviewCtlConfigFile)
 }

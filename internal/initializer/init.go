@@ -11,12 +11,12 @@ import (
 )
 
 func InitRepo(workingDir string) error {
-	previewCtrlConfigDirPath := constants.PreviewCtrlConfigDirPath(workingDir)
-	previewCtrlConfigFilePath := constants.PreviewCtrlConfigFilePath(workingDir)
+	previewCtlConfigDirPath := constants.PreviewCtlConfigDirPath(workingDir)
+	previewCtlConfigFilePath := constants.PreviewCtlConfigFilePath(workingDir)
 
-	err := os.MkdirAll(previewCtrlConfigDirPath, os.ModePerm)
+	err := os.MkdirAll(previewCtlConfigDirPath, os.ModePerm)
 	if err != nil {
-		return errors.Errorf("failed to initialized PreviewCtrl directory: %w", err)
+		return errors.Errorf("failed to initialized PreviewCtl directory: %w", err)
 	}
 
 	defaultYaml, err := yaml.GetDefaultYamlV1()
@@ -24,7 +24,7 @@ func InitRepo(workingDir string) error {
 		return errors.Errorf("failed to fetch default config file(THIS IS NOT SUPPOSED TO HAPPEN), please contact the dev: %w", err)
 	}
 
-	err = os.WriteFile(previewCtrlConfigFilePath, defaultYaml, os.ModePerm)
+	err = os.WriteFile(previewCtlConfigFilePath, defaultYaml, os.ModePerm)
 	if err != nil {
 		return errors.Errorf("failed to create config: %w", err)
 	}
@@ -38,7 +38,7 @@ func InitRepo(workingDir string) error {
 
 func addDataDirToGitignore(workingDir string) error {
 	gitignorePath := filepath.Join(workingDir, ".gitignore")
-	entry := constants.PreviewCtrlConfigDir + "/data/"
+	entry := constants.PreviewCtlConfigDir + "/data/"
 
 	data, err := os.ReadFile(gitignorePath)
 	if err != nil {
@@ -65,7 +65,7 @@ func addDataDirToGitignore(workingDir string) error {
 		prefix = ""
 	}
 
-	if _, err := f.WriteString(prefix + "\n# PreviewCtrl volume data\n" + entry + "\n"); err != nil {
+	if _, err := f.WriteString(prefix + "\n# PreviewCtl volume data\n" + entry + "\n"); err != nil {
 		return errors.Errorf("failed to write to .gitignore: %w", err)
 	}
 

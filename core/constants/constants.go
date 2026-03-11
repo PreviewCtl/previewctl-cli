@@ -1,6 +1,6 @@
 package constants
 
 var (
-	PreviewCtrlConfigDir  = ".previewctrl"
-	PreviewCtrlConfigFile = "preview.yml"
+	PreviewCtlConfigDir  = ".previewctl"
+	PreviewCtlConfigFile = "preview.yml"
 )

@@ -11,7 +11,7 @@ previewctl validate
 
 ## Description
 
-Validates the `.previewctrl/preview.yml` configuration file in the current directory.
+Validates the `.previewctl/preview.yml` configuration file in the current directory.
 
 Checks for:
 

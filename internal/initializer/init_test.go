@@ -16,12 +16,12 @@ func TestInitRepo_CreatesConfigDirAndFile(t *testing.T) {
 		t.Fatalf("InitRepo() error: %v", err)
 	}
 
-	configDir := constants.PreviewCtrlConfigDirPath(dir)
+	configDir := constants.PreviewCtlConfigDirPath(dir)
 	if _, err := os.Stat(configDir); os.IsNotExist(err) {
 		t.Error("expected config directory to be created")
 	}
 
-	configFile := constants.PreviewCtrlConfigFilePath(dir)
+	configFile := constants.PreviewCtlConfigFilePath(dir)
 	data, err := os.ReadFile(configFile)
 	if err != nil {
 		t.Fatalf("failed to read config file: %v", err)
@@ -64,7 +64,7 @@ func TestInitRepo_AddsDataDirToGitignore(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	entry := constants.PreviewCtrlConfigDir + "/data/"
+	entry := constants.PreviewCtlConfigDir + "/data/"
 	if !strings.Contains(string(data), entry) {
 		t.Errorf(".gitignore should contain %q, got:\n%s", entry, string(data))
 	}
@@ -91,7 +91,7 @@ func TestInitRepo_GitignoreNotDuplicated(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	entry := constants.PreviewCtrlConfigDir + "/data/"
+	entry := constants.PreviewCtlConfigDir + "/data/"
 	count := strings.Count(string(data), entry)
 	if count != 1 {
 		t.Errorf("expected entry to appear once, appeared %d times", count)

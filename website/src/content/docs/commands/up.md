@@ -11,7 +11,7 @@ previewctl up [flags]
 
 ## Description
 
-Reads `.previewctrl/preview.yml`, resolves service dependencies, and starts the preview stack in Docker.
+Reads `.previewctl/preview.yml`, resolves service dependencies, and starts the preview stack in Docker.
 
 The `up` command will:
 

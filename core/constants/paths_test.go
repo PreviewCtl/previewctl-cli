@@ -5,18 +5,18 @@ import (
 	"testing"
 )
 
-func TestPreviewCtrlConfigDirPath(t *testing.T) {
-	got := PreviewCtrlConfigDirPath("/home/user/project")
-	want := filepath.Join("/home/user/project", PreviewCtrlConfigDir)
+func TestPreviewCtlConfigDirPath(t *testing.T) {
+	got := PreviewCtlConfigDirPath("/home/user/project")
+	want := filepath.Join("/home/user/project", PreviewCtlConfigDir)
 	if got != want {
-		t.Errorf("PreviewCtrlConfigDirPath() = %q, want %q", got, want)
+		t.Errorf("PreviewCtlConfigDirPath() = %q, want %q", got, want)
 	}
 }
 
-func TestPreviewCtrlConfigFilePath(t *testing.T) {
-	got := PreviewCtrlConfigFilePath("/home/user/project")
-	want := filepath.Join("/home/user/project", PreviewCtrlConfigDir, PreviewCtrlConfigFile)
+func TestPreviewCtlConfigFilePath(t *testing.T) {
+	got := PreviewCtlConfigFilePath("/home/user/project")
+	want := filepath.Join("/home/user/project", PreviewCtlConfigDir, PreviewCtlConfigFile)
 	if got != want {
-		t.Errorf("PreviewCtrlConfigFilePath() = %q, want %q", got, want)
+		t.Errorf("PreviewCtlConfigFilePath() = %q, want %q", got, want)
 	}
 }

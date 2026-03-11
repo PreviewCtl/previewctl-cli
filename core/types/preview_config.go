@@ -1,6 +1,6 @@
 package types
 
-// PreviewConfig represents the root structure of .previewctrl/config.yml.
+// PreviewConfig represents the root structure of .previewctl/config.yml.
 type PreviewConfig struct {
 	Version  int                      `yaml:"version"`
 	Preview  PreviewSettings          `yaml:"preview"`

@@ -10,7 +10,7 @@ import (
 // validateCmd represents the validate command
 var validateCmd = &cobra.Command{
 	Use:   "validate",
-	Short: "Validate .previewctrl/preview.yml",
+	Short: "Validate .previewctl/preview.yml",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if _, err := validator.LoadAndValidateConfig(workingDir); err != nil {
 			return err

@@ -64,7 +64,7 @@ body:
   - type: textarea
     attributes:
       label: preview.yml Config
-      description: Share your `.previewctrl/preview.yml` (redact secrets). Helps us reproduce the issue.
+      description: Share your `.previewctl/preview.yml` (redact secrets). Helps us reproduce the issue.
       render: yaml
     validations:
       required: false

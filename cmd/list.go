@@ -17,7 +17,7 @@ var listAll bool
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List preview environments",
-	Long: `List preview environments tracked by PreviewCtrl.
+	Long: `List preview environments tracked by PreviewCtl.
 
 By default only previews belonging to the current workspace are shown.
 Use --all to display every preview environment across all workspaces.`,

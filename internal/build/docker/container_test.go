@@ -27,14 +27,14 @@ func TestResolveVolumePaths(t *testing.T) {
 	}
 
 	// First bind: /var/lib/postgresql/data -> sanitized path
-	expectedHost := filepath.Join(workingDir, ".previewctrl", "data", "postgres", "var_lib_postgresql_data")
+	expectedHost := filepath.Join(workingDir, ".previewctl", "data", "postgres", "var_lib_postgresql_data")
 	expectedBind := expectedHost + ":/var/lib/postgresql/data"
 	if binds[0] != expectedBind {
 		t.Errorf("bind[0] = %q, want %q", binds[0], expectedBind)
 	}
 
 	// Second bind: /data
-	expectedHost2 := filepath.Join(workingDir, ".previewctrl", "data", "postgres", "data")
+	expectedHost2 := filepath.Join(workingDir, ".previewctl", "data", "postgres", "data")
 	expectedBind2 := expectedHost2 + ":/data"
 	if binds[1] != expectedBind2 {
 		t.Errorf("bind[1] = %q, want %q", binds[1], expectedBind2)

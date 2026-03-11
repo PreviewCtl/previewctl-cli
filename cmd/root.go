@@ -20,10 +20,10 @@ var workingDir string
 var rootCmd = &cobra.Command{
 	Use:   "previewctl",
 	Short: "Spin up ephemeral preview environments with Docker",
-	Long: `PreviewCtrl is a CLI tool for creating and managing ephemeral
+	Long: `PreviewCtl is a CLI tool for creating and managing ephemeral
 preview environments locally using Docker.
 
-Define your services, builds, and dependencies in a .previewctrl/preview.yml
+Define your services, builds, and dependencies in a .previewctl/preview.yml
 config file and bring them up with a single command.`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		datasource, err := database.DefaultDatasource()

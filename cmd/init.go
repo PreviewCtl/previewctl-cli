@@ -8,7 +8,7 @@ import (
 // initCmd represents the init command
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "Initialize PreviewCtrl in this repo",
+	Short: "Initialize PreviewCtl in this repo",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return initializer.InitRepo(workingDir)
 	},

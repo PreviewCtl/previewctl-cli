@@ -11,7 +11,7 @@ description: Get up and running with PreviewCtl in under a minute.
 ## Install
 
 ```bash
-go install github.com/previewctrl/previewctl-cli@latest
+go install github.com/previewctl/previewctl-cli@latest
 ```
 
 Verify the installation:
@@ -28,11 +28,11 @@ Navigate to your project root and run:
 previewctl init
 ```
 
-This creates a `.previewctrl/` directory with a default `preview.yml` config file.
+This creates a `.previewctl/` directory with a default `preview.yml` config file.
 
 ## Configure your services
 
-Edit `.previewctrl/preview.yml` to define your stack:
+Edit `.previewctl/preview.yml` to define your stack:
 
 ```yaml
 version: 1

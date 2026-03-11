@@ -27,7 +27,7 @@ var (
 var upCmd = &cobra.Command{
 	Use:   "up",
 	Short: "Build and deploy preview services to Docker",
-	Long: `Read .previewctrl/preview.yml, resolve service dependencies, and start
+	Long: `Read .previewctl/preview.yml, resolve service dependencies, and start
 the preview stack in Docker.
 
 The up command will build services (for example Dockerfile and Nixpacks

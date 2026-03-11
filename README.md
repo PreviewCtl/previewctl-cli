@@ -1,6 +1,6 @@
-# PreviewCtrl CLI
+# PreviewCtl CLI
 
-PreviewCtrl is a command-line tool for creating and managing ephemeral preview environments locally using Docker. Define your services, builds, and dependencies in a single YAML config file and bring them up with one command.
+PreviewCtl is a command-line tool for creating and managing ephemeral preview environments locally using Docker. Define your services, builds, and dependencies in a single YAML config file and bring them up with one command.
 
 ## Features
 
@@ -42,7 +42,7 @@ go build -o previewctl .
 previewctl init
 
 # 2. Edit the generated config
-#    .previewctrl/preview.yml
+#    .previewctl/preview.yml
 
 # 3. Bring up the preview environment
 previewctl up
@@ -56,7 +56,7 @@ previewctl delete <name>
 
 ## Configuration
 
-PreviewCtrl reads its configuration from `.previewctrl/preview.yml` in your project root. Running `previewctl init` scaffolds a starter config.
+PreviewCtl reads its configuration from `.previewctl/preview.yml` in your project root. Running `previewctl init` scaffolds a starter config.
 
 ### Example
 
@@ -150,7 +150,7 @@ Template expressions use `${...}` syntax inside env values:
 
 ### `previewctl init`
 
-Initialize PreviewCtrl in the current repository. Creates the `.previewctrl/` directory and a starter `preview.yml` config file. Also adds `.previewctrl/data/` to `.gitignore`.
+Initialize PreviewCtl in the current repository. Creates the `.previewctl/` directory and a starter `preview.yml` config file. Also adds `.previewctl/data/` to `.gitignore`.
 
 ```bash
 previewctl init
@@ -158,7 +158,7 @@ previewctl init
 
 ### `previewctl up`
 
-Build and deploy all services defined in `.previewctrl/preview.yml`. Resolves template variables, builds images, creates a Docker network, and starts containers in dependency order.
+Build and deploy all services defined in `.previewctl/preview.yml`. Resolves template variables, builds images, creates a Docker network, and starts containers in dependency order.
 
 ```bash
 previewctl up [flags]
@@ -172,7 +172,7 @@ previewctl up [flags]
 
 ### `previewctl list`
 
-List preview environments tracked by PreviewCtrl.
+List preview environments tracked by PreviewCtl.
 
 ```bash
 previewctl list [flags]
@@ -196,7 +196,7 @@ Aliases: `rm`
 
 ### `previewctl validate`
 
-Validate the `.previewctrl/preview.yml` config file without deploying anything. Checks YAML schema, required fields, supported build types, dependency references, and cycle detection.
+Validate the `.previewctl/preview.yml` config file without deploying anything. Checks YAML schema, required fields, supported build types, dependency references, and cycle detection.
 
 ```bash
 previewctl validate
