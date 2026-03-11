@@ -20,7 +20,6 @@ profile.cov
 website/node_modules/
 website/.astro/
 website/dist/
-website/package-lock.json
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
