@@ -9,6 +9,7 @@ export default defineConfig({
             logo: {
                 src: "./src/assets/logo.png",
             },
+            favicon: "./src/assets/logo.png",
             description:
                 "Spin up ephemeral preview environments with Docker — one YAML, one command.",
             social: [
