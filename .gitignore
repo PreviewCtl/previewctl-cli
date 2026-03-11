@@ -17,6 +17,11 @@ coverage.*
 *.coverprofile
 profile.cov
 
+website/node_modules/
+website/.astro/
+website/dist/
+website/package-lock.json
+
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
@@ -32,6 +37,7 @@ go.work.sum
 # .vscode/
 main
 previewctl-cli
-# PreviewCtrl volume data
-.previewctrl/data/
+# PreviewCtl volume data
+.previewctl/data/
 .devdbrc
+changes.patch

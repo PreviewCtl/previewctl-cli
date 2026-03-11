@@ -1,0 +1,61 @@
+---
+const features = [
+  {
+    icon: "📦",
+    title: "One YAML, Full Stack",
+    description:
+      "Define services, databases, workers, and their dependencies in a single preview.yml config file.",
+  },
+  {
+    icon: "🔀",
+    title: "DAG-Based Ordering",
+    description:
+      "Services start in the correct order. PreviewCtl resolves dependency graphs so postgres starts before your API.",
+  },
+  {
+    icon: "🐳",
+    title: "Multiple Build Types",
+    description:
+      "Build from Dockerfiles, Nixpacks, or Railpack — or use pre-built images. Mix and match per service.",
+  },
+  {
+    icon: "🔐",
+    title: "Secret Injection",
+    description:
+      "Reference secrets with ${secrets.KEY} syntax. Pass them via --secret flags or .env files.",
+  },
+  {
+    icon: "🌐",
+    title: "Service Networking",
+    description:
+      "Containers are wired together automatically. Reference other services with ${services.api.host} templating.",
+  },
+  {
+    icon: "⏱️",
+    title: "TTL & Auto-Cleanup",
+    description:
+      "Set a TTL on preview environments and they clean themselves up. No stale containers lingering.",
+  },
+];
+---
+
+<section class="features">
+  <div class="features-header">
+    <h2>Everything you need for local preview environments</h2>
+    <p>
+      PreviewCtl handles the orchestration so you can focus on building your
+      application.
+    </p>
+  </div>
+  <div class="features-grid">
+    {
+      features.map((feature) => (
+        <div class="feature-card">
+          <span class="feature-icon">{feature.icon}</span>
+          <h3>{feature.title}</h3>
+          <p>{feature.description}</p>
+        </div>
+      ))
+    }
+  </div>
+</section>

@@ -1,0 +1,69 @@
+---
+const yamlExample = `version: 1
+
+preview:
+  ttl: 24h
+
+services:
+  frontend:
+    build:
+      type: dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
+    port: 3000
+    env:
+      API_URL: http://\${services.api.host}:\${services.api.port}
+    depends_on:
+      - api
+
+  api:
+    build:
+      type: railpack
+      context: ./api
+    port: 8080
+    env:
+      DATABASE_URL: \${services.postgres.env.POSTGRES_URL}
+      STRIPE_API_KEY: \${secrets.STRIPE_API_KEY}
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:16
+    port: 5432
+    env:
+      POSTGRES_DB: mydb
+      POSTGRES_PASSWORD: \${Generate(16)}
+
+  redis:
+    image: redis:7
+    port: 6379`;
+---
+
+<section class="yaml-preview">
+  <div class="yaml-preview-content">
+    <div class="yaml-text">
+      <h2>Your entire stack in one file</h2>
+      <p>
+        A single <code>.previewctrl/preview.yml</code> describes your services,
+        builds, dependencies, and environment variables. Run
+        <code>previewctl up</code> and everything comes alive.
+      </p>
+      <ul class="yaml-highlights">
+        <li>Service-to-service references with <code>${`\${services.*}`}</code> templating</li>
+        <li>Auto-generated passwords with <code>${`\${Generate(16)}`}</code></li>
+        <li>External secrets via <code>${`\${secrets.*}`}</code></li>
+        <li>Dependency ordering with <code>depends_on</code></li>
+      </ul>
+    </div>
+    <div class="yaml-code">
+      <div class="code-header">
+        <span class="code-dot red"></span>
+        <span class="code-dot yellow"></span>
+        <span class="code-dot green"></span>
+        <span class="code-filename">preview.yml</span>
+      </div>
+      <pre><code>{yamlExample}</code></pre>
+    </div>
+  </div>
+</section>

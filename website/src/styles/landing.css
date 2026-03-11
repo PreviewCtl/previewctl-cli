@@ -1,0 +1,325 @@
+/* ===== Landing page styles ===== */
+
+/* Hero */
+.hero {
+    text-align: center;
+    padding: 4rem 1.5rem 3rem;
+    max-width: 50rem;
+    margin: 0 auto;
+}
+
+.hero h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    line-height: 1.15;
+    margin-bottom: 1.5rem;
+    font-weight: 800;
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+:root[data-theme="dark"] .gradient-text {
+    background: linear-gradient(135deg, #a5b4fc 0%, #c084fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    line-height: 1.7;
+    color: var(--sl-color-gray-2);
+    max-width: 38rem;
+    margin: 0 auto 2rem;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.75rem 1.75rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+}
+
+.btn-secondary {
+    background: var(--sl-color-gray-6);
+    color: var(--sl-color-white);
+    border: 1px solid var(--sl-color-gray-5);
+}
+
+.hero-install {
+    display: inline-block;
+    background: var(--sl-color-gray-6);
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.5rem;
+}
+
+.hero-install code {
+    font-size: 0.9rem;
+    color: var(--sl-color-white);
+    background: none;
+    padding: 0;
+}
+
+/* Features */
+.features {
+    padding: 4rem 1.5rem;
+    max-width: 68rem;
+    margin: 0 auto;
+}
+
+.features-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.features-header h2 {
+    font-size: 1.8rem;
+    margin-bottom: 0.75rem;
+}
+
+.features-header p {
+    color: var(--sl-color-gray-2);
+    font-size: 1.1rem;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    gap: 1.5rem;
+}
+
+.feature-card {
+    background: var(--sl-color-gray-6);
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.75rem;
+    padding: 1.75rem;
+    transition: border-color 0.2s ease;
+}
+
+.feature-card:hover {
+    border-color: var(--sl-color-gray-3);
+}
+
+.feature-icon {
+    font-size: 1.75rem;
+    display: block;
+    margin-bottom: 0.75rem;
+}
+
+.feature-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.feature-card p {
+    color: var(--sl-color-gray-2);
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+/* YAML Preview */
+.yaml-preview {
+    padding: 4rem 1.5rem;
+    max-width: 68rem;
+    margin: 0 auto;
+}
+
+.yaml-preview-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: start;
+}
+
+@media (max-width: 768px) {
+    .yaml-preview-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+.yaml-text h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+
+.yaml-text p {
+    color: var(--sl-color-gray-2);
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+}
+
+.yaml-text code {
+    background: var(--sl-color-gray-6);
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.85rem;
+}
+
+.yaml-highlights {
+    list-style: none;
+    padding: 0;
+}
+
+.yaml-highlights li {
+    padding: 0.4rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+    color: var(--sl-color-gray-2);
+    font-size: 0.95rem;
+}
+
+.yaml-highlights li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: #667eea;
+}
+
+.yaml-code {
+    background: var(--sl-color-gray-6);
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.code-header {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--sl-color-gray-5);
+}
+
+.code-dot {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
+}
+
+.code-dot.red {
+    background: #ff5f57;
+}
+
+.code-dot.yellow {
+    background: #febc2e;
+}
+
+.code-dot.green {
+    background: #28c840;
+}
+
+.code-filename {
+    margin-left: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--sl-color-gray-2);
+}
+
+.yaml-code pre {
+    margin: 0;
+    padding: 1rem;
+    overflow-x: auto;
+    font-size: 0.8rem;
+    line-height: 1.6;
+}
+
+.yaml-code code {
+    background: none;
+    padding: 0;
+}
+
+/* CTA */
+.cta {
+    text-align: center;
+    padding: 4rem 1.5rem;
+    max-width: 50rem;
+    margin: 0 auto;
+}
+
+.cta h2 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.cta>p {
+    color: var(--sl-color-gray-2);
+    font-size: 1.1rem;
+    margin-bottom: 2.5rem;
+}
+
+.cta-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 32rem;
+    margin: 0 auto 2.5rem;
+}
+
+.cta-step {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--sl-color-gray-6);
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    text-align: left;
+}
+
+.step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.cta-step code {
+    font-size: 0.9rem;
+    background: none;
+    padding: 0;
+}
+
+/* Hide Starlight sidebar + TOC on landing page */
+[data-has-hero] .right-sidebar,
+[data-has-hero] .sidebar {
+    display: none;
+}
+
+[data-has-hero] .main-pane {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+}
