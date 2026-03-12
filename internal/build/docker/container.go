@@ -103,7 +103,7 @@ func CreateService(ctx context.Context, cli *client.Client, networkName, service
 	}
 
 	// Host config with port bindings and volumes
-	binds, err := resolveVolumePaths(svc.Volumes, serviceName, workingDir)
+	binds, err := resolveVolumePaths(svc.Volumes, networkName, serviceName, workingDir)
 	if err != nil {
 		return "", fmt.Errorf("failed to prepare volumes: %w", err)
 	}
@@ -172,14 +172,14 @@ func StartService(ctx context.Context, cli *client.Client, containerID, containe
 	return hostPort, nil
 }
 
-// resolveVolumePaths maps container paths to host paths under .previewctl/data/{serviceName}/.
+// resolveVolumePaths maps container paths to host paths under .previewctl/data/{previewID}/{serviceName}/.
 // Each volume entry is a container path (e.g. "/var/lib/postgresql/data").
-// The host path is derived as {workingDir}/.previewctl/data/{serviceName}/{sanitized-container-path}.
-func resolveVolumePaths(volumes []string, serviceName, workingDir string) ([]string, error) {
+// The host path is derived as {workingDir}/.previewctl/data/{previewID}/{serviceName}/{sanitized-container-path}.
+func resolveVolumePaths(volumes []string, previewID, serviceName, workingDir string) ([]string, error) {
 	binds := make([]string, 0, len(volumes))
 	for _, containerPath := range volumes {
 		sanitized := strings.ReplaceAll(strings.Trim(containerPath, "/"), "/", "_")
-		hostPath := filepath.Join(constants.PreviewCtlConfigDirPath(workingDir), "data", serviceName, sanitized)
+		hostPath := filepath.Join(constants.PreviewCtlConfigDirPath(workingDir), "data", previewID, serviceName, sanitized)
 		// if err := os.MkdirAll(hostPath, 0o777); err != nil {
 		// 	return nil, fmt.Errorf("failed to create volume directory %q: %w", hostPath, err)
 		// }
