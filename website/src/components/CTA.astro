@@ -1,5 +1,5 @@
 ---
-import { withBase } from "astro:config";
+const gettingStartedUrl = `${import.meta.env.BASE_URL}getting-started/`;
 ---
 
 <section class="cta">
@@ -19,5 +19,5 @@ import { withBase } from "astro:config";
       <code>previewctl up</code>
     </div>
   </div>
-  <a href={withBase("/getting-started/")} class="btn btn-primary">Read the Guide</a>
+  <a href={gettingStartedUrl} class="btn btn-primary">Read the Guide</a>
 </section>

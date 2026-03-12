@@ -1,5 +1,5 @@
 ---
-import { withBase } from "astro:config";
+const gettingStartedUrl = `${import.meta.env.BASE_URL}getting-started/`;
 ---
 
 <section class="hero">
@@ -14,7 +14,7 @@ import { withBase } from "astro:config";
       secret injection, and automatic cleanup.
     </p>
     <div class="hero-actions">
-      <a href={withBase("/getting-started/")} class="btn btn-primary">Get Started</a>
+      <a href={gettingStartedUrl} class="btn btn-primary">Get Started</a>
       <a
         href="https://github.com/previewctl/previewctl-cli"
         class="btn btn-secondary"
