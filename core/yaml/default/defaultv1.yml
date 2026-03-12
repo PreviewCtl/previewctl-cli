@@ -49,6 +49,11 @@ services:
     port: 5432
     volumes:
       - /var/lib/postgresql/data
+    seed:
+      poststart:
+        - source: db/seed.sql
+          destination: /tmp/seed.sql
+          cmd: psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /tmp/seed.sql
     env:
       POSTGRES_DB: mydb
       POSTGRES_USER: postgres

@@ -153,6 +153,63 @@ func ValidateConfig(config types.PreviewConfig) error {
 		if _, err := envGraph.TopoSort(); err != nil {
 			return fmt.Errorf("services.%s: env vars contain circular references", serviceName)
 		}
+
+		// Validate seed entries.
+		if service.Seed != nil {
+			for i, entry := range service.Seed.Prestart {
+				if strings.TrimSpace(entry.Source) == "" {
+					return fmt.Errorf("services.%s.seed.prestart[%d]: source is required", serviceName, i)
+				}
+				if strings.TrimSpace(entry.Destination) == "" {
+					return fmt.Errorf("services.%s.seed.prestart[%d]: destination is required", serviceName, i)
+				}
+				if strings.TrimSpace(entry.Cmd) != "" {
+					return fmt.Errorf("services.%s.seed.prestart[%d]: prestart seeds cannot have cmd; use poststart instead", serviceName, i)
+				}
+			}
+			for i, entry := range service.Seed.Poststart {
+				if strings.TrimSpace(entry.Source) == "" {
+					return fmt.Errorf("services.%s.seed.poststart[%d]: source is required", serviceName, i)
+				}
+				if strings.TrimSpace(entry.Destination) == "" {
+					return fmt.Errorf("services.%s.seed.poststart[%d]: destination is required", serviceName, i)
+				}
+				// Validate ${...} template variables in cmd.
+				if entry.Cmd != "" {
+					for _, match := range templateVar.FindAllStringSubmatch(entry.Cmd, -1) {
+						expr := match[1]
+						if generateExpr.MatchString("${" + expr + "}") {
+							continue
+						}
+						if m := serviceEnvRef.FindStringSubmatch(expr); m != nil {
+							refService := m[1]
+							refEnvKey := m[2]
+							if _, exists := config.Services[refService]; !exists {
+								return fmt.Errorf("services.%s.seed.poststart[%d].cmd: references undefined service %q", serviceName, i, refService)
+							}
+							if refService != serviceName {
+								if !depSet[refService] {
+									return fmt.Errorf("services.%s.seed.poststart[%d].cmd: references env of service %q which is not in depends_on", serviceName, i, refService)
+								}
+							}
+							refSvc := config.Services[refService]
+							if _, exists := refSvc.Env[refEnvKey]; !exists {
+								return fmt.Errorf("services.%s.seed.poststart[%d].cmd: service %q has no env var %q", serviceName, i, refService, refEnvKey)
+							}
+							continue
+						}
+						// Allow dotted references (services.X.host, secrets.X, preview.id, etc.)
+						if strings.Contains(expr, ".") {
+							continue
+						}
+						// Bare variable must reference an env var in the same service.
+						if _, exists := service.Env[expr]; !exists {
+							return fmt.Errorf("services.%s.seed.poststart[%d].cmd: references undefined env var ${%s}", serviceName, i, expr)
+						}
+					}
+				}
+			}
+		}
 	}
 
 	if _, err := serviceGraph.TopoSort(); err != nil {

@@ -22,6 +22,9 @@ website/.astro/
 website/dist/
 website/package-lock.json
 
+# PreviewCtl data directories
+**/.previewctl/data/
+
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
@@ -37,7 +40,5 @@ go.work.sum
 # .vscode/
 main
 previewctl-cli
-# PreviewCtl volume data
-.previewctl/data/
 .devdbrc
 changes.patch

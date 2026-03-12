@@ -1,0 +1,116 @@
+version: 1
+
+preview:
+  ttl: 48h
+
+services:
+  # ─── PostgreSQL (pre-built image) ────────────────────────────────────
+  # Tests: image, port, volumes, env with Generate(), bare self-refs,
+  #        self service.host/port refs, prestart seed (copy-only),
+  #        poststart seed (copy + cmd with bare var refs)
+  postgres:
+    image: postgres:16
+    port: 5432
+    volumes:
+      - /var/lib/postgresql/data
+    env:
+      POSTGRES_DB: appdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${Generate(16)}
+      POSTGRES_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${services.postgres.host}:${services.postgres.port}/${POSTGRES_DB}?sslmode=disable
+    seed:
+      prestart:
+        - source: db/postgresql.conf
+          destination: /etc/postgresql/postgresql.conf
+      poststart:
+        - source: db/migrations/001_create_tables.sql
+          destination: /tmp/001_create_tables.sql
+          cmd: until pg_isready -h 127.0.0.1 -U ${POSTGRES_USER}; do sleep 1; done && psql -h 127.0.0.1 -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /tmp/001_create_tables.sql
+        - source: db/seed.sql
+          destination: /tmp/seed.sql
+          cmd: until pg_isready -h 127.0.0.1 -U ${POSTGRES_USER}; do sleep 1; done && psql -h 127.0.0.1 -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /tmp/seed.sql
+
+  # ─── API (Dockerfile build) ──────────────────────────────────────────
+  # Tests: dockerfile build type, cross-service env refs (host, port, env),
+  #        secrets refs, preview.id ref, Generate(), bare self-refs
+  api:
+    build:
+      type: dockerfile
+      context: ./api
+      dockerfile: Dockerfile
+    port: 8080
+    env:
+      NODE_ENV: production
+      DATABASE_HOST: ${services.postgres.host}
+      DATABASE_PORT: ${services.postgres.port}
+      DATABASE_URL: ${services.postgres.env.POSTGRES_URL}
+      JWT_SECRET: ${Generate(32)}
+      SESSION_SECRET: ${Generate(24)}
+      STRIPE_API_KEY: ${secrets.STRIPE_API_KEY}
+      SENDGRID_API_KEY: ${secrets.SENDGRID_API_KEY}
+      PREVIEW_ID: ${preview.id}
+      APP_NAME: fullstack-preview
+      APP_LABEL: ${APP_NAME}-${PREVIEW_ID}
+    depends_on:
+      - postgres
+
+  # ─── SQLite API (Railpack build) ─────────────────────────────────────
+  # Tests: railpack build type, prestart seed (copy db file),
+  #        poststart seed (run migrations with bare env ref in cmd),
+  #        Generate(), preview.id
+  sqlite-api:
+    build:
+      type: railpack
+      context: ./sqlite-api
+    port: 5000
+    env:
+      FLASK_ENV: production
+      DB_PATH: /app/data/app.db
+      API_KEY: ${Generate(24)}
+      PREVIEW_ID: ${preview.id}
+    seed:
+      prestart:
+        - source: sqlite-api/data/seed.db
+          destination: /app/data/app.db
+      poststart:
+        - source: sqlite-api/data/migrations.sql
+          destination: /tmp/migrations.sql
+          cmd: python3 -c "import sqlite3; c=sqlite3.connect('${DB_PATH}'); c.executescript(open('/tmp/migrations.sql').read()); c.close()"
+
+  # ─── Static JSON server (Dockerfile build) ───────────────────────────
+  # Tests: dockerfile build with custom Dockerfile, prestart seeds
+  #        (multiple copy-only entries), simple env
+  static-json:
+    build:
+      type: dockerfile
+      context: ./static-json
+      dockerfile: Dockerfile
+    port: 80
+    env:
+      NGINX_PORT: "80"
+    seed:
+      prestart:
+        - source: static-json/data/config.json
+          destination: /usr/share/nginx/html/api/config.json
+        - source: static-json/data/users.json
+          destination: /usr/share/nginx/html/api/users.json
+        - source: static-json/data/products.json
+          destination: /usr/share/nginx/html/api/products.json
+
+  # ─── Frontend (Nixpacks build) ───────────────────────────────────────
+  # Tests: nixpacks build type, cross-service host/port refs to multiple
+  #        services, preview.id, depends_on with multiple dependencies
+  frontend:
+    build:
+      type: nixpacks
+      context: ./frontend
+    port: 3000
+    env:
+      API_URL: http://${services.api.host}:${services.api.port}
+      SQLITE_API_URL: http://${services.sqlite-api.host}:${services.sqlite-api.port}
+      STATIC_JSON_URL: http://${services.static-json.host}:${services.static-json.port}
+      PREVIEW_ID: ${preview.id}
+    depends_on:
+      - api
+      - sqlite-api
+      - static-json

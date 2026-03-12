@@ -3,6 +3,7 @@ package up
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/previewctl/previewctl-cli/internal/build/docker"
 	"github.com/previewctl/previewctl-cli/internal/build/nixpacks"
@@ -85,12 +86,41 @@ func HandleUp(ctx context.Context, previewID string, previewEnvID string, config
 
 		preferredPort := portLookup[serviceName]
 
-		containerID, hostPort, err := docker.RunService(ctx, cli, previewID, serviceName, svc, userSecrets, preferredPort, workingDir)
+		containerName := previewID + "-" + serviceName
+
+		// Phase 1: Create container (not started yet)
+		containerID, err := docker.CreateService(ctx, cli, previewID, serviceName, svc, userSecrets, preferredPort, workingDir)
+		if err != nil {
+			return fmt.Errorf("service %q: %w", serviceName, err)
+		}
+
+		// Phase 2: Run prestart seeds (filesystem seeds — copy before container starts)
+		if svc.Seed != nil && len(svc.Seed.Prestart) > 0 {
+			fmt.Printf("  running prestart seeds for %s...\n", serviceName)
+			if err := docker.RunPrestartSeeds(ctx, cli, containerID, svc.Seed.Prestart, workingDir); err != nil {
+				return fmt.Errorf("service %q prestart seed: %w", serviceName, err)
+			}
+		}
+
+		// Phase 3: Start the container
+		hostPort, err := docker.StartService(ctx, cli, containerID, containerName, svc)
 		if err != nil {
 			return fmt.Errorf("service %q: %w", serviceName, err)
 		}
 
 		fmt.Printf("  started %s (container %s)\n", serviceName, containerID[:12])
+
+		// Phase 4: Run poststart seeds (runtime seeds — after container is healthy)
+		if svc.Seed != nil && len(svc.Seed.Poststart) > 0 {
+			fmt.Printf("  waiting for %s to be ready...\n", serviceName)
+			if err := docker.WaitHealthy(ctx, cli, containerID, 30*time.Second); err != nil {
+				return fmt.Errorf("service %q: %w", serviceName, err)
+			}
+			fmt.Printf("  running poststart seeds for %s...\n", serviceName)
+			if err := docker.RunPoststartSeeds(ctx, cli, containerID, svc.Seed.Poststart, workingDir); err != nil {
+				return fmt.Errorf("service %q poststart seed: %w", serviceName, err)
+			}
+		}
 
 		if svc.Port > 0 && hostPort > 0 {
 			portMappings = append(portMappings, portMapping{

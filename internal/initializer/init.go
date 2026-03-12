@@ -38,7 +38,7 @@ func InitRepo(workingDir string) error {
 
 func addDataDirToGitignore(workingDir string) error {
 	gitignorePath := filepath.Join(workingDir, ".gitignore")
-	entry := constants.PreviewCtlConfigDir + "/data/"
+	entry := "**/" + constants.PreviewCtlConfigDir + "/data/"
 
 	data, err := os.ReadFile(gitignorePath)
 	if err != nil {
@@ -65,7 +65,7 @@ func addDataDirToGitignore(workingDir string) error {
 		prefix = ""
 	}
 
-	if _, err := f.WriteString(prefix + "\n# PreviewCtl volume data\n" + entry + "\n"); err != nil {
+	if _, err := f.WriteString(prefix + "\n# PreviewCtl data directories\n" + entry + "\n"); err != nil {
 		return errors.Errorf("failed to write to .gitignore: %w", err)
 	}
 

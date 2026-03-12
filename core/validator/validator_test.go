@@ -299,6 +299,264 @@ func TestValidateConfig_MultipleDeps(t *testing.T) {
 	}
 }
 
+// --- Seed validation tests ---
+
+func TestValidateConfig_SeedPrestartValid(t *testing.T) {
+	c := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "1h"},
+		Services: map[string]types.ServiceConfig{
+			"api": {
+				Image: "api:latest",
+				Seed: &types.SeedConfig{
+					Prestart: []types.SeedEntry{
+						{Source: "db/data.sqlite", Destination: "/app/data/app.db"},
+					},
+				},
+			},
+		},
+	}
+	if err := ValidateConfig(c); err != nil {
+		t.Fatalf("valid prestart seed should pass, got: %v", err)
+	}
+}
+
+func TestValidateConfig_SeedPoststartValid(t *testing.T) {
+	c := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "1h"},
+		Services: map[string]types.ServiceConfig{
+			"db": {
+				Image: "postgres:16",
+				Env:   map[string]string{"POSTGRES_USER": "postgres"},
+				Seed: &types.SeedConfig{
+					Poststart: []types.SeedEntry{
+						{Source: "db/seed.sql", Destination: "/tmp/seed.sql", Cmd: "psql -f /tmp/seed.sql"},
+					},
+				},
+			},
+		},
+	}
+	if err := ValidateConfig(c); err != nil {
+		t.Fatalf("valid poststart seed should pass, got: %v", err)
+	}
+}
+
+func TestValidateConfig_SeedPoststartNoCmdValid(t *testing.T) {
+	c := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "1h"},
+		Services: map[string]types.ServiceConfig{
+			"api": {
+				Image: "api:latest",
+				Seed: &types.SeedConfig{
+					Poststart: []types.SeedEntry{
+						{Source: "config/runtime.json", Destination: "/app/config.json"},
+					},
+				},
+			},
+		},
+	}
+	if err := ValidateConfig(c); err != nil {
+		t.Fatalf("poststart without cmd should pass, got: %v", err)
+	}
+}
+
+func TestValidateConfig_SeedPrestartMissingSource(t *testing.T) {
+	c := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "1h"},
+		Services: map[string]types.ServiceConfig{
+			"api": {
+				Image: "api:latest",
+				Seed: &types.SeedConfig{
+					Prestart: []types.SeedEntry{
+						{Destination: "/app/data/app.db"},
+					},
+				},
+			},
+		},
+	}
+	assertValidationError(t, c, "source is required")
+}
+
+func TestValidateConfig_SeedPrestartMissingDestination(t *testing.T) {
+	c := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "1h"},
+		Services: map[string]types.ServiceConfig{
+			"api": {
+				Image: "api:latest",
+				Seed: &types.SeedConfig{
+					Prestart: []types.SeedEntry{
+						{Source: "db/data.sqlite"},
+					},
+				},
+			},
+		},
+	}
+	assertValidationError(t, c, "destination is required")
+}
+
+func TestValidateConfig_SeedPrestartWithCmdFails(t *testing.T) {
+	c := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "1h"},
+		Services: map[string]types.ServiceConfig{
+			"db": {
+				Image: "postgres:16",
+				Seed: &types.SeedConfig{
+					Prestart: []types.SeedEntry{
+						{Source: "db/seed.sql", Destination: "/tmp/seed.sql", Cmd: "psql -f /tmp/seed.sql"},
+					},
+				},
+			},
+		},
+	}
+	assertValidationError(t, c, "prestart seeds cannot have cmd")
+}
+
+func TestValidateConfig_SeedPoststartMissingSource(t *testing.T) {
+	c := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "1h"},
+		Services: map[string]types.ServiceConfig{
+			"db": {
+				Image: "postgres:16",
+				Seed: &types.SeedConfig{
+					Poststart: []types.SeedEntry{
+						{Destination: "/tmp/seed.sql", Cmd: "psql -f /tmp/seed.sql"},
+					},
+				},
+			},
+		},
+	}
+	assertValidationError(t, c, "source is required")
+}
+
+func TestValidateConfig_SeedPoststartMissingDestination(t *testing.T) {
+	c := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "1h"},
+		Services: map[string]types.ServiceConfig{
+			"db": {
+				Image: "postgres:16",
+				Seed: &types.SeedConfig{
+					Poststart: []types.SeedEntry{
+						{Source: "db/seed.sql", Cmd: "psql -f /tmp/seed.sql"},
+					},
+				},
+			},
+		},
+	}
+	assertValidationError(t, c, "destination is required")
+}
+
+func TestValidateConfig_SeedPoststartCmdCrossServiceWithoutDependsOn(t *testing.T) {
+	c := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "1h"},
+		Services: map[string]types.ServiceConfig{
+			"db":  {Image: "postgres:16", Env: map[string]string{"POSTGRES_USER": "pg"}},
+			"api": {
+				Image: "api:latest",
+				Seed: &types.SeedConfig{
+					Poststart: []types.SeedEntry{
+						{Source: "s.sh", Destination: "/s.sh", Cmd: "${services.db.env.POSTGRES_USER}"},
+					},
+				},
+			},
+		},
+	}
+	assertValidationError(t, c, "not in depends_on")
+}
+
+func TestValidateConfig_SeedPoststartCmdCrossServiceValid(t *testing.T) {
+	c := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "1h"},
+		Services: map[string]types.ServiceConfig{
+			"db": {Image: "postgres:16", Env: map[string]string{"POSTGRES_USER": "pg"}},
+			"api": {
+				Image:     "api:latest",
+				DependsOn: []string{"db"},
+				Seed: &types.SeedConfig{
+					Poststart: []types.SeedEntry{
+						{Source: "s.sh", Destination: "/s.sh", Cmd: "/s.sh --user ${services.db.env.POSTGRES_USER}"},
+					},
+				},
+			},
+		},
+	}
+	if err := ValidateConfig(c); err != nil {
+		t.Fatalf("poststart cmd with valid cross-service ref should pass, got: %v", err)
+	}
+}
+
+func TestValidateConfig_SeedPoststartCmdUndefinedBareVar(t *testing.T) {
+	c := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "1h"},
+		Services: map[string]types.ServiceConfig{
+			"db": {
+				Image: "postgres:16",
+				Env:   map[string]string{"POSTGRES_USER": "pg"},
+				Seed: &types.SeedConfig{
+					Poststart: []types.SeedEntry{
+						{Source: "s.sh", Destination: "/s.sh", Cmd: "${UNDEFINED_VAR}"},
+					},
+				},
+			},
+		},
+	}
+	assertValidationError(t, c, "references undefined env var")
+}
+
+func TestValidateConfig_SeedPoststartCmdBareVarValid(t *testing.T) {
+	c := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "1h"},
+		Services: map[string]types.ServiceConfig{
+			"db": {
+				Image: "postgres:16",
+				Env:   map[string]string{"POSTGRES_USER": "pg", "POSTGRES_DB": "mydb"},
+				Seed: &types.SeedConfig{
+					Poststart: []types.SeedEntry{
+						{Source: "s.sql", Destination: "/s.sql", Cmd: "psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /s.sql"},
+					},
+				},
+			},
+		},
+	}
+	if err := ValidateConfig(c); err != nil {
+		t.Fatalf("poststart cmd with valid bare env ref should pass, got: %v", err)
+	}
+}
+
+func TestValidateConfig_SeedBothPhasesValid(t *testing.T) {
+	c := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "1h"},
+		Services: map[string]types.ServiceConfig{
+			"api": {
+				Image: "api:latest",
+				Env:   map[string]string{"DB_NAME": "mydb"},
+				Seed: &types.SeedConfig{
+					Prestart: []types.SeedEntry{
+						{Source: "fixtures/", Destination: "/app/fixtures/"},
+					},
+					Poststart: []types.SeedEntry{
+						{Source: "db/seed.sql", Destination: "/tmp/seed.sql", Cmd: "psql -d ${DB_NAME} -f /tmp/seed.sql"},
+					},
+				},
+			},
+		},
+	}
+	if err := ValidateConfig(c); err != nil {
+		t.Fatalf("both phases valid should pass, got: %v", err)
+	}
+}
+
 func assertValidationError(t *testing.T, config types.PreviewConfig, contains string) {
 	t.Helper()
 	err := ValidateConfig(config)

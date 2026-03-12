@@ -41,6 +41,25 @@ func ResolveConfig(config types.PreviewConfig, previewID string, secrets map[str
 
 		resolvedSvc := svc
 		resolvedSvc.Env = resolvedEnv
+
+		// Resolve ${...} templates in poststart seed commands.
+		if svc.Seed != nil {
+			resolvedSeed := &types.SeedConfig{
+				Prestart: svc.Seed.Prestart,
+			}
+			for i, entry := range svc.Seed.Poststart {
+				if entry.Cmd != "" {
+					resolvedCmd, err := resolveValue(entry.Cmd, config, previewID, secrets, resolvedEnv, resolved.Services)
+					if err != nil {
+						return types.PreviewConfig{}, fmt.Errorf("services.%s.seed.poststart[%d].cmd: %w", name, i, err)
+					}
+					entry.Cmd = resolvedCmd
+				}
+				resolvedSeed.Poststart = append(resolvedSeed.Poststart, entry)
+			}
+			resolvedSvc.Seed = resolvedSeed
+		}
+
 		resolved.Services[name] = resolvedSvc
 	}
 

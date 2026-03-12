@@ -17,7 +17,22 @@ type ServiceConfig struct {
 	Port      int               `yaml:"port,omitempty"`
 	Env       map[string]string `yaml:"env,omitempty"`
 	Volumes   []string          `yaml:"volumes,omitempty"`
+	Seed      *SeedConfig       `yaml:"seed,omitempty"`
 	DependsOn []string          `yaml:"depends_on,omitempty"`
+}
+
+// SeedConfig holds pre-start (filesystem) and post-start (runtime) seed entries.
+type SeedConfig struct {
+	Prestart  []SeedEntry `yaml:"prestart,omitempty"`
+	Poststart []SeedEntry `yaml:"poststart,omitempty"`
+}
+
+// SeedEntry describes a file or directory to copy into a container,
+// with an optional command to run after copying (poststart only).
+type SeedEntry struct {
+	Source      string `yaml:"source"`
+	Destination string `yaml:"destination"`
+	Cmd         string `yaml:"cmd,omitempty"`
 }
 
 const (

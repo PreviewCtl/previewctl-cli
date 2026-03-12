@@ -350,3 +350,185 @@ func TestResolveConfig_ServiceNoPort(t *testing.T) {
 		t.Errorf("error should mention 'no port', got: %v", err)
 	}
 }
+
+// --- Seed cmd resolution tests ---
+
+func TestResolveConfig_SeedPoststartCmdBareEnvRef(t *testing.T) {
+	config := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "24h"},
+		Services: map[string]types.ServiceConfig{
+			"db": {
+				Image: "postgres:16",
+				Port:  5432,
+				Env: map[string]string{
+					"POSTGRES_USER": "postgres",
+					"POSTGRES_DB":   "mydb",
+				},
+				Seed: &types.SeedConfig{
+					Poststart: []types.SeedEntry{
+						{Source: "db/seed.sql", Destination: "/tmp/seed.sql", Cmd: "psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /tmp/seed.sql"},
+					},
+				},
+			},
+		},
+	}
+
+	resolved, err := ResolveConfig(config, "p1", nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	want := "psql -U postgres -d mydb -f /tmp/seed.sql"
+	got := resolved.Services["db"].Seed.Poststart[0].Cmd
+	if got != want {
+		t.Errorf("seed cmd = %q, want %q", got, want)
+	}
+}
+
+func TestResolveConfig_SeedPoststartCmdCrossServiceEnvRef(t *testing.T) {
+	config := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "24h"},
+		Services: map[string]types.ServiceConfig{
+			"db": {
+				Image: "postgres:16",
+				Port:  5432,
+				Env: map[string]string{
+					"POSTGRES_USER": "admin",
+					"POSTGRES_PWD":  "secret",
+				},
+			},
+			"api": {
+				Image:     "api:latest",
+				DependsOn: []string{"db"},
+				Seed: &types.SeedConfig{
+					Poststart: []types.SeedEntry{
+						{Source: "db/seed", Destination: "/seed", Cmd: "/seed/migrate.sh --POSTGRES_USER ${services.db.env.POSTGRES_USER} ${services.db.env.POSTGRES_PWD}"},
+					},
+				},
+			},
+		},
+	}
+
+	resolved, err := ResolveConfig(config, "p1", nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	want := "/seed/migrate.sh --POSTGRES_USER admin secret"
+	got := resolved.Services["api"].Seed.Poststart[0].Cmd
+	if got != want {
+		t.Errorf("seed cmd = %q, want %q", got, want)
+	}
+}
+
+func TestResolveConfig_SeedPoststartCmdSecretRef(t *testing.T) {
+	config := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "24h"},
+		Services: map[string]types.ServiceConfig{
+			"db": {
+				Image: "postgres:16",
+				Seed: &types.SeedConfig{
+					Poststart: []types.SeedEntry{
+						{Source: "s.sh", Destination: "/s.sh", Cmd: "/s.sh ${secrets.DB_TOKEN}"},
+					},
+				},
+			},
+		},
+	}
+
+	secrets := map[string]string{"DB_TOKEN": "tok123"}
+	resolved, err := ResolveConfig(config, "p1", secrets)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	want := "/s.sh tok123"
+	got := resolved.Services["db"].Seed.Poststart[0].Cmd
+	if got != want {
+		t.Errorf("seed cmd = %q, want %q", got, want)
+	}
+}
+
+func TestResolveConfig_SeedPoststartCmdPreviewID(t *testing.T) {
+	config := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "24h"},
+		Services: map[string]types.ServiceConfig{
+			"app": {
+				Image: "app:latest",
+				Seed: &types.SeedConfig{
+					Poststart: []types.SeedEntry{
+						{Source: "s.sh", Destination: "/s.sh", Cmd: "/s.sh --preview ${preview.id}"},
+					},
+				},
+			},
+		},
+	}
+
+	resolved, err := ResolveConfig(config, "my-preview-42", nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	want := "/s.sh --preview my-preview-42"
+	got := resolved.Services["app"].Seed.Poststart[0].Cmd
+	if got != want {
+		t.Errorf("seed cmd = %q, want %q", got, want)
+	}
+}
+
+func TestResolveConfig_SeedPrestartPassedThrough(t *testing.T) {
+	config := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "24h"},
+		Services: map[string]types.ServiceConfig{
+			"api": {
+				Image: "api:latest",
+				Seed: &types.SeedConfig{
+					Prestart: []types.SeedEntry{
+						{Source: "db/data.sqlite", Destination: "/app/data/app.db"},
+						{Source: "fixtures/", Destination: "/app/fixtures/"},
+					},
+				},
+			},
+		},
+	}
+
+	resolved, err := ResolveConfig(config, "p1", nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	seed := resolved.Services["api"].Seed
+	if seed == nil {
+		t.Fatal("expected seed to be preserved, got nil")
+	}
+	if len(seed.Prestart) != 2 {
+		t.Fatalf("expected 2 prestart entries, got %d", len(seed.Prestart))
+	}
+	if seed.Prestart[0].Source != "db/data.sqlite" || seed.Prestart[0].Destination != "/app/data/app.db" {
+		t.Errorf("prestart[0] = %+v, want source=db/data.sqlite dest=/app/data/app.db", seed.Prestart[0])
+	}
+}
+
+func TestResolveConfig_SeedNilPassedThrough(t *testing.T) {
+	config := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "24h"},
+		Services: map[string]types.ServiceConfig{
+			"api": {Image: "api:latest"},
+		},
+	}
+
+	resolved, err := ResolveConfig(config, "p1", nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if resolved.Services["api"].Seed != nil {
+		t.Error("expected nil seed, got non-nil")
+	}
+}

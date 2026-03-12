@@ -62,6 +62,23 @@ func StopAndRemoveContainer(ctx context.Context, cli *client.Client, containerNa
 // If preferredHostPort > 0, the container will attempt to bind to that host port.
 // It returns the container ID and the dynamically assigned host port (0 if no port exposed).
 func RunService(ctx context.Context, cli *client.Client, networkName, serviceName string, svc types.ServiceConfig, secrets map[string]string, preferredHostPort int, workingDir string) (string, int, error) {
+	containerID, err := CreateService(ctx, cli, networkName, serviceName, svc, secrets, preferredHostPort, workingDir)
+	if err != nil {
+		return "", 0, err
+	}
+
+	hostPort, err := StartService(ctx, cli, containerID, networkName+"-"+serviceName, svc)
+	if err != nil {
+		return "", 0, err
+	}
+
+	return containerID, hostPort, nil
+}
+
+// CreateService creates (but does not start) a container for the given service.
+// This allows prestart seeds to be copied into the container before it starts.
+// Returns the container ID.
+func CreateService(ctx context.Context, cli *client.Client, networkName, serviceName string, svc types.ServiceConfig, secrets map[string]string, preferredHostPort int, workingDir string) (string, error) {
 	containerName := networkName + "-" + serviceName
 
 	// Stop and remove existing container if present (idempotent re-runs)
@@ -88,7 +105,7 @@ func RunService(ctx context.Context, cli *client.Client, networkName, serviceNam
 	// Host config with port bindings and volumes
 	binds, err := resolveVolumePaths(svc.Volumes, serviceName, workingDir)
 	if err != nil {
-		return "", 0, fmt.Errorf("failed to prepare volumes: %w", err)
+		return "", fmt.Errorf("failed to prepare volumes: %w", err)
 	}
 	hostConfig := &container.HostConfig{
 		Binds: binds,
@@ -126,19 +143,25 @@ func RunService(ctx context.Context, cli *client.Client, networkName, serviceNam
 		Name:             containerName,
 	})
 	if err != nil {
-		return "", 0, fmt.Errorf("failed to create container %q: %w", containerName, err)
+		return "", fmt.Errorf("failed to create container %q: %w", containerName, err)
 	}
 
-	if _, err := cli.ContainerStart(ctx, resp.ID, client.ContainerStartOptions{}); err != nil {
-		return "", 0, fmt.Errorf("failed to start container %q: %w", containerName, err)
+	return resp.ID, nil
+}
+
+// StartService starts a previously created container and discovers the
+// dynamically assigned host port (0 if no port exposed).
+func StartService(ctx context.Context, cli *client.Client, containerID, containerName string, svc types.ServiceConfig) (int, error) {
+	if _, err := cli.ContainerStart(ctx, containerID, client.ContainerStartOptions{}); err != nil {
+		return 0, fmt.Errorf("failed to start container %q: %w", containerName, err)
 	}
 
 	// Discover the dynamically assigned host port
 	var hostPort int
 	if svc.Port > 0 {
-		inspect, err := cli.ContainerInspect(ctx, resp.ID, client.ContainerInspectOptions{})
+		inspect, err := cli.ContainerInspect(ctx, containerID, client.ContainerInspectOptions{})
 		if err != nil {
-			return "", 0, fmt.Errorf("failed to inspect container %q: %w", containerName, err)
+			return 0, fmt.Errorf("failed to inspect container %q: %w", containerName, err)
 		}
 		portKey := network.MustParsePort(strconv.Itoa(svc.Port) + "/tcp")
 		if bindings, ok := inspect.Container.NetworkSettings.Ports[portKey]; ok && len(bindings) > 0 {
@@ -146,7 +169,7 @@ func RunService(ctx context.Context, cli *client.Client, networkName, serviceNam
 		}
 	}
 
-	return resp.ID, hostPort, nil
+	return hostPort, nil
 }
 
 // resolveVolumePaths maps container paths to host paths under .previewctl/data/{serviceName}/.

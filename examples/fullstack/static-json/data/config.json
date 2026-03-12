@@ -1,0 +1,14 @@
+{
+    "app_name": "fullstack-preview",
+    "version": "1.0.0",
+    "features": {
+        "auth": true,
+        "payments": true,
+        "notifications": true
+    },
+    "api_endpoints": {
+        "users": "/api/users",
+        "notes": "/api/notes",
+        "products": "/api/products.json"
+    }
+}
