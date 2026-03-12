@@ -31,14 +31,16 @@ jobs:
       - name: Remove lockfile for cross-platform compatibility
         run: rm -f ./website/package-lock.json
 
+      - name: Write env file
+        run: |
+          echo "SITE_URL=${{ github.event.inputs.site_url || 'https://previewctl.github.io' }}" >> ./website/.env
+          echo "BASE_PATH=${{ github.event.inputs.base_path || '/previewctl-cli' }}" >> ./website/.env
+
       - name: Install, build, and upload site
         uses: withastro/action@v5
         with:
           path: ./website
           package-manager: npm@latest
-        env:
-          SITE_URL: ${{ github.event.inputs.site_url || 'https://previewctl.github.io' }}
-          BASE_PATH: ${{ github.event.inputs.base_path || '/previewctl-cli' }}
 
   deploy:
     needs: build
