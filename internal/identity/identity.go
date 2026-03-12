@@ -11,7 +11,7 @@ import (
 // ResolvePreviewID returns a valid preview ID. If inputID is non-empty it is
 // validated and returned. Otherwise a new ID is generated from the workspace
 // directory name with a random numeric suffix.
-func ResolvePreviewID(inputID string, workingDir string, branch string) (id string, err error) {
+func ResolvePreviewID(inputID string, workingDir string, branch string) (string, error) {
 	trimmed := strings.TrimSpace(inputID)
 	if trimmed != "" {
 		if !IsValidResourceName(trimmed) {
@@ -21,33 +21,16 @@ func ResolvePreviewID(inputID string, workingDir string, branch string) (id stri
 	}
 
 	folderName := filepath.Base(workingDir)
-	base := SanitizeResourceName(folderName)
-	if base == "" {
-		base = "preview"
+	id := SanitizeResourceName(folderName)
+	if id == "" {
+		id = "preview"
 	}
 
 	branchPart := SanitizeResourceName(branch)
 	if branchPart != "" {
-		base = base + "-" + branchPart
+		id = id + "-" + branchPart
 	}
 
-	suffix, err := randomNumericSuffix(8)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate preview id: %w", err)
-	}
-
-	maxBaseLen := 63 - 1 - len(suffix)
-	if maxBaseLen < 1 {
-		maxBaseLen = 1
-	}
-	if len(base) > maxBaseLen {
-		base = strings.Trim(base[:maxBaseLen], "-")
-	}
-	if base == "" {
-		base = "preview"
-	}
-
-	id = base + "-" + suffix
 	if !IsValidResourceName(id) {
 		return "", fmt.Errorf("failed to generate valid preview id")
 	}
