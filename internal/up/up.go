@@ -3,11 +3,13 @@ package up
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/previewctl/previewctl-cli/internal/build/docker"
 	"github.com/previewctl/previewctl-cli/internal/build/nixpacks"
 	"github.com/previewctl/previewctl-cli/internal/build/railpack"
+	"github.com/previewctl/previewctl-cli/internal/identity"
 	"github.com/previewctl/previewctl-cli/internal/store"
 	"github.com/previewctl/previewctl-cli/internal/store/database"
 	"github.com/previewctl/previewctl-core/deployment"
@@ -15,7 +17,7 @@ import (
 	"github.com/previewctl/previewctl-core/types"
 )
 
-func HandleUp(ctx context.Context, previewID string, previewEnvID string, config types.PreviewConfig, secrets map[string]string, userSecrets map[string]string, portStore *database.PortMappingStore, workingDir string) error {
+func HandleUp(ctx context.Context, previewID string, previewEnvID string, branch string, config types.PreviewConfig, secrets map[string]string, userSecrets map[string]string, portStore *database.PortMappingStore, workingDir string) error {
 	resolvedConfig, err := resolver.ResolveConfig(config, previewID, secrets)
 	if err != nil {
 		return fmt.Errorf("failed to resolve config variables: %w", err)
@@ -60,7 +62,9 @@ func HandleUp(ctx context.Context, previewID string, previewEnvID string, config
 		fmt.Printf("deploying %s...\n", serviceName)
 
 		if svc.Build != nil {
-			imageTag := previewID + "-" + serviceName + ":latest"
+			sanitizedBranch := identity.SanitizeResourceName(branch)
+			imageBase := strings.TrimSuffix(previewID, "-"+sanitizedBranch)
+			imageTag := imageBase + "-" + serviceName + ":" + sanitizedBranch
 			switch svc.Build.Type {
 			case types.BuildTypeDockerfile:
 				if err := docker.BuildImage(ctx, imageTag, *svc.Build, userSecrets, workingDir); err != nil {

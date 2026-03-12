@@ -63,7 +63,7 @@ required dependency order.`,
 			return err
 		}
 
-		if err := up.HandleUp(cmd.Context(), previewEnvName, previewEnv.ID, config, resolutionSecrets, userSecrets, portStore, workingDir); err != nil {
+		if err := up.HandleUp(cmd.Context(), previewEnvName, previewEnv.ID, branch, config, resolutionSecrets, userSecrets, portStore, workingDir); err != nil {
 			return err
 		}
 
