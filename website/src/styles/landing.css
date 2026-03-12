@@ -126,6 +126,7 @@
     border-radius: 0.75rem;
     padding: 1.75rem;
     transition: border-color 0.2s ease;
+    margin-top: 1rem;
 }
 
 .feature-card:hover {

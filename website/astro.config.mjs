@@ -38,6 +38,12 @@ export default defineConfig({
                     ],
                 },
                 {
+                    label: "Guides",
+                    items: [
+                        { label: "Seed Scripts", slug: "guides/seed-scripts" },
+                    ],
+                },
+                {
                     label: "Reference",
                     items: [{ label: "Configuration", slug: "configuration" }],
                 },
