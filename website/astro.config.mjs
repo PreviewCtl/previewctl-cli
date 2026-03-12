@@ -2,8 +2,8 @@ import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 
 export default defineConfig({
-    site: process.env.SITE_URL || "https://previewctl.github.io",
-    base: process.env.BASE_PATH || "/previewctl-cli",
+    site: process.env.SITE_URL || "",
+    base: process.env.BASE_PATH || "",
     integrations: [
         starlight({
             title: "PreviewCTL",

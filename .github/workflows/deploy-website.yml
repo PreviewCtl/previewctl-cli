@@ -4,9 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       site_url:
-        description: "Site URL (e.g. https://previewctl.com)"
+        description: "Site URL (e.g. https://previewctl.github.io)"
         required: false
-        default: "https://previewctl.com"
+        default: "https://previewctl.github.io"
+      base_path:
+        description: "Base path for the site (e.g. /previewctl-cli)"
+        required: false
+        default: "/previewctl-cli"
 
 permissions:
   contents: read
@@ -33,7 +37,8 @@ jobs:
           path: ./website
           package-manager: npm@latest
         env:
-          SITE_URL: ${{ github.event.inputs.site_url || 'https://previewctl.com' }}
+          SITE_URL: ${{ github.event.inputs.site_url || 'https://previewctl.github.io' }}
+          BASE_PATH: ${{ github.event.inputs.base_path || '/previewctl-cli' }}
 
   deploy:
     needs: build
