@@ -26,6 +26,7 @@ jobs:
         uses: withastro/action@v5
         with:
           path: ./website
+          package-manager: npm@latest
 
   deploy:
     needs: build
