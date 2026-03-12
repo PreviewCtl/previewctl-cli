@@ -56,6 +56,11 @@ services:
     port: 5432
     volumes:
       - /var/lib/postgresql/data
+    seed:
+      poststart:
+        - source: db/seed.sql
+          destination: /tmp/seed.sql
+          cmd: psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /tmp/seed.sql
     env:
       POSTGRES_DB: mydb
       POSTGRES_USER: postgres
@@ -92,6 +97,7 @@ Each key under `services` defines a service. A service is either **built from so
 | `port` | `int` | No | Port the service listens on inside the container. |
 | `env` | `map` | No | Environment variables. Values support template syntax. |
 | `volumes` | `string[]` | No | Container volume mounts. |
+| `seed` | `object` | No | Seed configuration for initializing the container with files and commands. |
 | `depends_on` | `string[]` | No | Services this service depends on. Controls startup order. |
 
 \* One of `build` or `image` is required.
@@ -111,6 +117,59 @@ Each key under `services` defines a service. A service is either **built from so
 | `dockerfile` | Standard Docker build. Specify `context` and optionally `dockerfile`. |
 | `nixpacks` | Automatic build using [Nixpacks](https://nixpacks.com). Detects language and framework. |
 | `railpack` | Automatic build using [Railpack](https://railpack.com). |
+
+## `services.<name>.seed`
+
+The `seed` field lets you copy files into a container and optionally run initialization commands. This is useful for database seeding, loading fixtures, or running migrations.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `prestart` | `SeedEntry[]` | No | Files to copy into the container **before** it starts. No commands can be run. |
+| `poststart` | `SeedEntry[]` | No | Files to copy and commands to run **after** the container starts and is healthy. |
+
+### Seed entry fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `source` | `string` | Yes | Path to the file or directory on the host, relative to the project root. |
+| `destination` | `string` | Yes | Path inside the container where the file will be copied. |
+| `cmd` | `string` | No | Command to run inside the container after copying (only for `poststart`). |
+
+### Example: Database seeding
+
+```yaml
+services:
+  postgres:
+    image: postgres:16
+    port: 5432
+    seed:
+      poststart:
+        - source: db/seed.sql
+          destination: /tmp/seed.sql
+          cmd: psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /tmp/seed.sql
+    env:
+      POSTGRES_DB: mydb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${Generate(16)}
+```
+
+### Example: Config file injection
+
+```yaml
+services:
+  nginx:
+    image: nginx:latest
+    port: 80
+    seed:
+      prestart:
+        - source: config/nginx.conf
+          destination: /etc/nginx/nginx.conf
+```
+
+### How seeding works
+
+1. **Prestart seeds** run after the container is created but before it starts. Files are copied into the stopped container. This is ideal for configuration files that must be in place before the process launches.
+2. **Poststart seeds** run after the container starts and is healthy. Files are copied first, then the optional `cmd` is executed inside the container via `sh -c`. This is ideal for database initialization, running migrations, or loading fixtures.
 
 ## Template syntax
 

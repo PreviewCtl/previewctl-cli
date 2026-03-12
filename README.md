@@ -50,7 +50,10 @@ previewctl up
 # 4. List active environments
 previewctl list
 
-# 5. Tear it down
+# 5. Stop the environment (preserves data)
+previewctl down <name>
+
+# 6. Tear it down permanently
 previewctl delete <name>
 ```
 
@@ -107,6 +110,11 @@ services:
     port: 5432
     volumes:
       - /var/lib/postgresql/data
+    seed:
+      poststart:
+        - source: db/seed.sql
+          destination: /tmp/seed.sql
+          cmd: psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /tmp/seed.sql
     env:
       POSTGRES_DB: mydb
       POSTGRES_USER: postgres
@@ -131,6 +139,9 @@ services:
 | `services.<name>.port` | Container port to expose. A random host port is allocated and persisted. |
 | `services.<name>.env` | Key-value map of environment variables. Supports template expressions. |
 | `services.<name>.volumes` | List of volume mount paths inside the container. |
+| `services.<name>.seed` | Seed configuration for copying files and running commands in the container. |
+| `services.<name>.seed.prestart` | List of files to copy into the container before it starts. |
+| `services.<name>.seed.poststart` | List of files to copy and commands to run after the container starts. |
 | `services.<name>.depends_on` | List of service names this service depends on (controls deploy order). |
 
 ### Template Expressions
@@ -184,9 +195,17 @@ previewctl list [flags]
 
 Aliases: `ls`
 
+### `previewctl down <name>`
+
+Stop a preview environment by name or ID. Stops and removes all Docker containers and the network, but preserves the environment record, port mappings, and data directory so the preview can be brought back up with `previewctl up`.
+
+```bash
+previewctl down <name>
+```
+
 ### `previewctl delete <name>`
 
-Delete a preview environment by name or ID. Stops and removes all Docker containers and the network, then cleans up the local database records.
+Permanently delete a preview environment by name or ID. Stops and removes all Docker containers and the network, deletes the data directory, and cleans up the local database records.
 
 ```bash
 previewctl delete <name>

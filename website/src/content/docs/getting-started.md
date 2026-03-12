@@ -90,6 +90,14 @@ abc123    my-project-main   main     active   /home/user/my-project  2026-03-11 
 
 ## Clean up
 
+Stop the environment (preserves data so you can `up` again later):
+
+```bash
+previewctl down my-project-main
+```
+
+Or permanently delete it:
+
 ```bash
 previewctl delete my-project-main
 ```

@@ -32,6 +32,7 @@ export default defineConfig({
                         { label: "init", slug: "commands/init" },
                         { label: "validate", slug: "commands/validate" },
                         { label: "up", slug: "commands/up" },
+                        { label: "down", slug: "commands/down" },
                         { label: "list", slug: "commands/list" },
                         { label: "delete", slug: "commands/delete" },
                     ],
