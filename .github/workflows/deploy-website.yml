@@ -2,6 +2,11 @@ name: Deploy Website to GitHub Pages
 
 on:
   workflow_dispatch:
+    inputs:
+      site_url:
+        description: "Site URL (e.g. https://previewctl.com)"
+        required: false
+        default: "https://previewctl.com"
 
 permissions:
   contents: read
@@ -27,6 +32,8 @@ jobs:
         with:
           path: ./website
           package-manager: npm@latest
+        env:
+          SITE_URL: ${{ github.event.inputs.site_url || 'https://previewctl.com' }}
 
   deploy:
     needs: build
