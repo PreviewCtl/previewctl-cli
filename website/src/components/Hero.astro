@@ -1,4 +1,5 @@
 ---
+import { withBase } from "astro:config";
 ---
 
 <section class="hero">
@@ -13,7 +14,7 @@
       secret injection, and automatic cleanup.
     </p>
     <div class="hero-actions">
-      <a href="/getting-started/" class="btn btn-primary">Get Started</a>
+      <a href={withBase("/getting-started/")} class="btn btn-primary">Get Started</a>
       <a
         href="https://github.com/previewctl/previewctl-cli"
         class="btn btn-secondary"

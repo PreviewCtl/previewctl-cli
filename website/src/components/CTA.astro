@@ -1,4 +1,5 @@
 ---
+import { withBase } from "astro:config";
 ---
 
 <section class="cta">
@@ -18,5 +19,5 @@
       <code>previewctl up</code>
     </div>
   </div>
-  <a href="/getting-started/" class="btn btn-primary">Read the Guide</a>
+  <a href={withBase("/getting-started/")} class="btn btn-primary">Read the Guide</a>
 </section>
