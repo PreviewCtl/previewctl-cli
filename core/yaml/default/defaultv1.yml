@@ -18,7 +18,7 @@ services:
 
   api:
     build:
-      type: railack
+      type: railpack
       context: ./api
     port: 8080
     env:

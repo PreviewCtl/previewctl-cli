@@ -6,7 +6,7 @@ description: Delete a preview environment.
 ## Usage
 
 ```bash
-previewctl delete <name or id>
+previewctl delete [name or id]
 ```
 
 **Aliases:** `rm`
@@ -14,6 +14,8 @@ previewctl delete <name or id>
 ## Description
 
 Deletes a preview environment by name or ID.
+
+If no argument is given, PreviewCtl looks for preview environments in the current workspace. If exactly one exists, it is deleted automatically. If multiple exist, they are listed and you must specify one by name or ID.
 
 This command:
 
@@ -26,7 +28,7 @@ This command:
 
 | Argument | Required | Description |
 |----------|----------|-------------|
-| `<name or id>` | Yes | Name or ID of the preview environment to delete |
+| `[name or id]` | No | Name or ID of the preview environment to delete. If omitted, auto-selects from the current workspace. |
 
 ## Examples
 
@@ -40,6 +42,12 @@ Delete by ID:
 
 ```bash
 previewctl delete abc123
+```
+
+Auto-select from current workspace:
+
+```bash
+previewctl delete
 ```
 
 Using the alias:

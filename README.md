@@ -51,10 +51,10 @@ previewctl up
 previewctl list
 
 # 5. Stop the environment (preserves data)
-previewctl down <name>
+previewctl down
 
 # 6. Tear it down permanently
-previewctl delete <name>
+previewctl delete
 ```
 
 ## Configuration
@@ -195,20 +195,24 @@ previewctl list [flags]
 
 Aliases: `ls`
 
-### `previewctl down <name>`
+### `previewctl down [name]`
 
 Stop a preview environment by name or ID. Stops and removes all Docker containers and the network, but preserves the environment record, port mappings, and data directory so the preview can be brought back up with `previewctl up`.
 
+If no argument is given and only one preview exists in the current workspace, it is stopped automatically. If multiple exist, they are listed.
+
 ```bash
-previewctl down <name>
+previewctl down [name]
 ```
 
-### `previewctl delete <name>`
+### `previewctl delete [name]`
 
 Permanently delete a preview environment by name or ID. Stops and removes all Docker containers and the network, deletes the data directory, and cleans up the local database records.
 
+If no argument is given and only one preview exists in the current workspace, it is deleted automatically. If multiple exist, they are listed.
+
 ```bash
-previewctl delete <name>
+previewctl delete [name]
 ```
 
 Aliases: `rm`
