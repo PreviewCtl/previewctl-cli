@@ -3,21 +3,27 @@ const baseUrl = import.meta.env.BASE_URL.endsWith("/")
   ? import.meta.env.BASE_URL
   : `${import.meta.env.BASE_URL}/`;
 const gettingStartedUrl = `${baseUrl}getting-started/`;
+const cloudPreviewUrl = `${baseUrl}cloud-preview/`;
 ---
 
 <section class="hero">
   <div class="hero-content">
+    <!-- <a href={cloudPreviewUrl} class="hero-announcement" aria-label="Cloud PR previews coming soon">
+      <strong>New:</strong> Cloud PR previews are coming soon. Join the waitlist.
+      <span class="hero-announcement-arrow" aria-hidden="true">→</span>
+    </a> -->
     <h1>
       Preview environments,<br />
       <span class="gradient-text">one command away.</span>
     </h1>
     <p class="hero-subtitle">
       Define your entire stack in a single YAML file. PreviewCtl spins up
-      ephemeral Docker environments locally — with dependency resolution,
-      secret injection, and automatic cleanup.
+      ephemeral Docker environments locally — with dependency resolution, secret
+      injection, and automatic cleanup.
     </p>
     <div class="hero-actions">
       <a href={gettingStartedUrl} class="btn btn-primary">Get Started</a>
+      <!-- <a href={cloudPreviewUrl} class="btn btn-attention">Cloud PR Previews</a> -->
       <a
         href="https://github.com/previewctl/previewctl-cli"
         class="btn btn-secondary"

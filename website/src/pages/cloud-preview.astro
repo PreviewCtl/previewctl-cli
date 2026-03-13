@@ -1,0 +1,38 @@
+---
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import ComingSoon from "../components/ComingSoon.astro";
+const baseUrl = import.meta.env.BASE_URL.endsWith("/")
+  ? import.meta.env.BASE_URL
+  : `${import.meta.env.BASE_URL}/`;
+const docsUrl = `${baseUrl}getting-started/`;
+---
+
+<StarlightPage
+  frontmatter={{ title: "Cloud PR Previews", template: "splash", hero: { tagline: "" } }}
+  headings={[]}
+>
+<style is:global>
+  body:has(.cloud-page) .hero {
+    display: none;
+    padding: 0;
+    margin: 0;
+  }
+</style>
+  <div class="cloud-page">
+    <section class="cloud-hero">
+      <p class="cloud-kicker">PreviewCTL Cloud</p>
+      <h1>Automatic preview URLs on every pull request</h1>
+      <p>
+        Raise a PR, get a bot comment when build starts, and receive a live
+        preview URL once deployment is ready.
+      </p>
+      <div class="cloud-hero-actions">
+        <a href="https://github.com/previewctl/previewctl-cli/issues/new?title=Cloud%20PR%20Preview%20Waitlist&body=Please%20add%20me%20to%20the%20waitlist.%0A%0AGitHub%20org%2Frepo%3A%20%0ATeam%20size%3A%20%0AUse%20case%3A%20" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
+          Join the Waitlist
+        </a>
+        <a href={docsUrl} class="btn btn-secondary">Use CLI Today</a>
+      </div>
+    </section>
+    <ComingSoon />
+  </div>
+</StarlightPage>

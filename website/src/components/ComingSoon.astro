@@ -1,0 +1,48 @@
+---
+const repoUrl = "https://github.com/previewctl/previewctl-cli";
+const waitlistUrl = `${repoUrl}/issues/new?title=Cloud%20PR%20Preview%20Waitlist&body=Please%20add%20me%20to%20the%20waitlist.%0A%0AGitHub%20org%2Frepo%3A%20%0ATeam%20size%3A%20%0AUse%20case%3A%20`;
+const roadmapUrl = `${repoUrl}/issues?q=is%3Aissue%20cloud%20preview`;
+---
+
+<section class="coming-soon" aria-labelledby="cloud-preview-heading">
+  <div class="coming-soon-header">
+    <p class="coming-soon-kicker">Coming Soon</p>
+    <h2 id="cloud-preview-heading">Cloud PR previews for every pull request</h2>
+    <p>
+      We are building a hosted workflow that detects new PRs, spins up a preview
+      environment, and comments back with a live URL.
+    </p>
+  </div>
+
+  <div class="coming-soon-flow" role="list" aria-label="Cloud preview workflow">
+    <div class="flow-step" role="listitem">
+      <span class="flow-index">1</span>
+      <p>PR is opened in GitHub.</p>
+    </div>
+    <div class="flow-step" role="listitem">
+      <span class="flow-index">2</span>
+      <p>Bot comments: preview environment is in progress.</p>
+    </div>
+    <div class="flow-step" role="listitem">
+      <span class="flow-index">3</span>
+      <p>We build and deploy an isolated environment.</p>
+    </div>
+    <div class="flow-step" role="listitem">
+      <span class="flow-index">4</span>
+      <p>Bot updates the PR with the preview URL.</p>
+    </div>
+  </div>
+
+  <div class="coming-soon-actions">
+    <a href={waitlistUrl} class="btn btn-primary" target="_blank" rel="noopener noreferrer">
+      Join the Waitlist
+    </a>
+    <a href={roadmapUrl} class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
+      Track Progress
+    </a>
+  </div>
+  <p class="coming-soon-note">
+    Early access will roll out in batches. Tell us your repo size and team setup
+    so we can prioritize onboarding.
+  </p>
+</section>
