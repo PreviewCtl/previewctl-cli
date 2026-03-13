@@ -1,14 +1,13 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/previewctl/previewctl-cli/internal/build/docker"
 	"github.com/previewctl/previewctl-cli/internal/store"
-	"github.com/previewctl/previewctl-cli/internal/store/database"
 	"github.com/previewctl/previewctl-core/constants"
 	"github.com/spf13/cobra"
 )
@@ -23,29 +22,23 @@ This stops and removes all Docker containers and the network associated with
 the preview, then removes the environment and its port mappings from the
 local database.`,
 	Aliases: []string{"rm"},
-	Args:    cobra.ExactArgs(1),
+	Args:    cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		nameOrId := args[0]
+		ctx := cmd.Context()
 
-		envStore := database.NewPreviewEnvironmentStore(DB)
-		portStore := database.NewPortMappingStore(DB)
-		secretStore := database.NewGeneratedSecretStore(DB)
 		var env *store.PreviewEnvironment
 		var err error
-		env, err = envStore.FindByName(cmd.Context(), nameOrId)
-		if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
-			return err
-		}
-
-		if env == nil {
-			env, err = envStore.Find(cmd.Context(), nameOrId)
-			if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
+		if len(args) == 1 {
+			nameOrId := strings.TrimSpace(args[0])
+			env, err = findEnvByNameOrID(ctx, nameOrId)
+			if err != nil {
 				return err
 			}
-		}
-
-		if env == nil {
-			return fmt.Errorf("preview environment %q not found", nameOrId)
+		} else {
+			env, err = findCurrentPreviewIfOnce(ctx)
+			if err != nil {
+				return err
+			}
 		}
 
 		// Tear down Docker resources
@@ -56,7 +49,7 @@ local database.`,
 		defer cli.Close()
 
 		// Stop and remove all containers on the preview network
-		removed, err := docker.StopAndRemoveContainersByNetwork(cmd.Context(), cli, env.Name)
+		removed, err := docker.StopAndRemoveContainersByNetwork(ctx, cli, env.Name)
 		if err != nil {
 			fmt.Printf("warning: %v\n", err)
 		}
@@ -65,7 +58,7 @@ local database.`,
 		}
 
 		fmt.Printf("removing network %q...\n", env.Name)
-		if err := docker.RemoveNetwork(cmd.Context(), cli, env.Name); err != nil {
+		if err := docker.RemoveNetwork(ctx, cli, env.Name); err != nil {
 			fmt.Printf("  warning: %v\n", err)
 		}
 
@@ -76,19 +69,19 @@ local database.`,
 		}
 
 		// Clean up database records
-		if err := portStore.DeleteByPreviewEnv(cmd.Context(), env.ID); err != nil {
+		if err := portStore.DeleteByPreviewEnv(ctx, env.ID); err != nil {
 			return fmt.Errorf("failed to delete port mappings: %w", err)
 		}
 
-		if err := secretStore.DeleteByPreviewEnv(cmd.Context(), env.ID); err != nil {
+		if err := secretStore.DeleteByPreviewEnv(ctx, env.ID); err != nil {
 			return fmt.Errorf("failed to delete generated secrets: %w", err)
 		}
 
-		if err := envStore.Delete(cmd.Context(), env.ID); err != nil {
+		if err := envStore.Delete(ctx, env.ID); err != nil {
 			return fmt.Errorf("failed to delete preview environment: %w", err)
 		}
 
-		fmt.Printf("preview environment %q deleted\n", nameOrId)
+		fmt.Printf("preview environment %s : %q deleted\n", env.ID, env.Name)
 		return nil
 	},
 }

@@ -1,12 +1,11 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/previewctl/previewctl-cli/internal/build/docker"
 	"github.com/previewctl/previewctl-cli/internal/store"
-	"github.com/previewctl/previewctl-cli/internal/store/database"
 	"github.com/spf13/cobra"
 )
 
@@ -21,27 +20,23 @@ the environment record, port mappings, and data directory so the preview can
 be brought back up with "previewctl up".
 
 Use "previewctl delete" to permanently remove a preview environment.`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		nameOrId := args[0]
+		ctx := cmd.Context()
 
-		envStore := database.NewPreviewEnvironmentStore(DB)
 		var env *store.PreviewEnvironment
 		var err error
-		env, err = envStore.FindByName(cmd.Context(), nameOrId)
-		if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
-			return err
-		}
-
-		if env == nil {
-			env, err = envStore.Find(cmd.Context(), nameOrId)
-			if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
+		if len(args) == 1 {
+			nameOrId := strings.TrimSpace(args[0])
+			env, err = findEnvByNameOrID(ctx, nameOrId)
+			if err != nil {
 				return err
 			}
-		}
-
-		if env == nil {
-			return fmt.Errorf("preview environment %q not found", nameOrId)
+		} else {
+			env, err = findCurrentPreviewIfOnce(ctx)
+			if err != nil {
+				return err
+			}
 		}
 
 		cli, err := docker.NewClient()
@@ -51,7 +46,7 @@ Use "previewctl delete" to permanently remove a preview environment.`,
 		defer cli.Close()
 
 		// Stop and remove all containers on the preview network
-		removed, err := docker.StopAndRemoveContainersByNetwork(cmd.Context(), cli, env.Name)
+		removed, err := docker.StopAndRemoveContainersByNetwork(ctx, cli, env.Name)
 		if err != nil {
 			fmt.Printf("warning: %v\n", err)
 		}
@@ -60,15 +55,15 @@ Use "previewctl delete" to permanently remove a preview environment.`,
 		}
 
 		fmt.Printf("removing network %q...\n", env.Name)
-		if err := docker.RemoveNetwork(cmd.Context(), cli, env.Name); err != nil {
+		if err := docker.RemoveNetwork(ctx, cli, env.Name); err != nil {
 			fmt.Printf("  warning: %v\n", err)
 		}
 
-		if err := envStore.UpdateStatus(cmd.Context(), env.ID, "stopped"); err != nil {
+		if err := envStore.UpdateStatus(ctx, env.ID, "stopped"); err != nil {
 			return fmt.Errorf("failed to update environment status: %w", err)
 		}
 
-		fmt.Printf("preview environment %q stopped\n", nameOrId)
+		fmt.Printf("preview environment %s : %q stopped\n", env.ID, env.Name)
 		return nil
 	},
 }

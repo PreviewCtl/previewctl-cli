@@ -16,6 +16,14 @@ var DB *sqlx.DB
 
 var workingDir string
 
+var (
+	envStore    *database.PreviewEnvironmentStore
+	portStore   *database.PortMappingStore
+	secretStore *database.GeneratedSecretStore
+)
+
+var gitBranch string
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "previewctl",
@@ -26,6 +34,7 @@ preview environments locally using Docker.
 Define your services, builds, and dependencies in a .previewctl/preview.yml
 config file and bring them up with a single command.`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		ctx := cmd.Context()
 		datasource, err := database.DefaultDatasource()
 		if err != nil {
 			return fmt.Errorf("failed to resolve database path: %w", err)
@@ -35,18 +44,23 @@ config file and bring them up with a single command.`,
 			return fmt.Errorf("failed to create data directory: %w", err)
 		}
 
-		db, err := database.ConnectAndMigrate(cmd.Context(), datasource, database.Migrate)
+		db, err := database.ConnectAndMigrate(ctx, datasource, database.Migrate)
 		if err != nil {
 			return fmt.Errorf("failed to initialize database: %w", err)
 		}
 
 		DB = db
+		envStore = database.NewPreviewEnvironmentStore(DB)
+		portStore = database.NewPortMappingStore(DB)
+		secretStore = database.NewGeneratedSecretStore(DB)
 
 		workingDirectory, err := os.Getwd()
 		if err != nil {
 			return fmt.Errorf("failed to get working directory: %w", err)
 		}
 		workingDir = workingDirectory
+
+		gitBranch = resolveCurrentGitBranch()
 		return nil
 	},
 }

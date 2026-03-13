@@ -2,12 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"text/tabwriter"
-	"time"
 
 	"github.com/previewctl/previewctl-cli/internal/store"
-	"github.com/previewctl/previewctl-cli/internal/store/database"
 	"github.com/spf13/cobra"
 )
 
@@ -23,18 +19,18 @@ By default only previews belonging to the current workspace are shown.
 Use --all to display every preview environment across all workspaces.`,
 	Aliases: []string{"ls"},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		envStore := database.NewPreviewEnvironmentStore(DB)
+		ctx := cmd.Context()
 
 		var envs []*store.PreviewEnvironment
 
 		if listAll {
-			list, err := envStore.List(cmd.Context())
+			list, err := envStore.List(ctx)
 			if err != nil {
 				return fmt.Errorf("failed to list preview environments: %w", err)
 			}
 			envs = list
 		} else {
-			list, err := envStore.ListByWorkspace(cmd.Context(), workingDir)
+			list, err := envStore.ListByWorkspace(ctx, workingDir)
 			if err != nil {
 				return fmt.Errorf("failed to list preview environments: %w", err)
 			}
@@ -49,16 +45,6 @@ Use --all to display every preview environment across all workspaces.`,
 		printEnvTable(envs)
 		return nil
 	},
-}
-
-func printEnvTable(envs []*store.PreviewEnvironment) {
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-	fmt.Fprintln(w, "ID\tNAME\tBRANCH\tSTATUS\tWORKSPACE\tCREATED")
-	for _, e := range envs {
-		created := time.Unix(e.CreatedAt, 0).Format(time.DateTime)
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\n", e.ID, e.Name, e.Branch, e.Status, e.Workspace, created)
-	}
-	w.Flush()
 }
 
 func init() {
