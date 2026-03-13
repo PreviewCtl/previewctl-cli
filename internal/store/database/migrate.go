@@ -45,6 +45,23 @@ CREATE INDEX IF NOT EXISTS idx_port_mappings_preview_env_id
 ON port_mappings (preview_env_id);
 `
 
+const createTableGeneratedSecrets = `
+CREATE TABLE IF NOT EXISTS generated_secrets (
+	 id              TEXT    PRIMARY KEY,
+	 preview_env_id  TEXT    NOT NULL,
+	 service_name    TEXT    NOT NULL,
+	 env_key         TEXT    NOT NULL,
+	 value           TEXT    NOT NULL,
+	 created_at      INTEGER NOT NULL,
+	 UNIQUE(preview_env_id, service_name, env_key)
+);
+`
+
+const createIndexGeneratedSecretsPreviewEnv = `
+CREATE INDEX IF NOT EXISTS idx_generated_secrets_preview_env_id
+ON generated_secrets (preview_env_id);
+`
+
 // Migrate applies the database migrations.
 func Migrate(ctx context.Context, db *sqlx.DB) error {
 	if _, err := db.ExecContext(ctx, createTablePreviewEnvironments); err != nil {
@@ -60,6 +77,12 @@ func Migrate(ctx context.Context, db *sqlx.DB) error {
 		return err
 	}
 	if _, err := db.ExecContext(ctx, createIndexPortMappingsPreviewEnv); err != nil {
+		return err
+	}
+	if _, err := db.ExecContext(ctx, createTableGeneratedSecrets); err != nil {
+		return err
+	}
+	if _, err := db.ExecContext(ctx, createIndexGeneratedSecretsPreviewEnv); err != nil {
 		return err
 	}
 	return nil

@@ -36,7 +36,7 @@ func baseConfig() types.PreviewConfig {
 }
 
 func TestResolveConfig_ServiceHost(t *testing.T) {
-	resolved, err := ResolveConfig(baseConfig(), "test-preview", nil)
+	resolved, _, err := ResolveConfig(baseConfig(), "test-preview", nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -47,7 +47,7 @@ func TestResolveConfig_ServiceHost(t *testing.T) {
 }
 
 func TestResolveConfig_ServicePort(t *testing.T) {
-	resolved, err := ResolveConfig(baseConfig(), "test-preview", nil)
+	resolved, _, err := ResolveConfig(baseConfig(), "test-preview", nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -58,7 +58,7 @@ func TestResolveConfig_ServicePort(t *testing.T) {
 }
 
 func TestResolveConfig_ServiceEnvRef(t *testing.T) {
-	resolved, err := ResolveConfig(baseConfig(), "test-preview", nil)
+	resolved, _, err := ResolveConfig(baseConfig(), "test-preview", nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -69,7 +69,7 @@ func TestResolveConfig_ServiceEnvRef(t *testing.T) {
 }
 
 func TestResolveConfig_Generate(t *testing.T) {
-	resolved, err := ResolveConfig(baseConfig(), "test-preview", nil)
+	resolved, _, err := ResolveConfig(baseConfig(), "test-preview", nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -95,7 +95,7 @@ func TestResolveConfig_Secrets(t *testing.T) {
 	}
 
 	secrets := map[string]string{"MY_KEY": "secret123"}
-	resolved, err := ResolveConfig(config, "p1", secrets)
+	resolved, _, err := ResolveConfig(config, "p1", secrets, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -119,7 +119,7 @@ func TestResolveConfig_PreviewID(t *testing.T) {
 		},
 	}
 
-	resolved, err := ResolveConfig(config, "my-preview-123", nil)
+	resolved, _, err := ResolveConfig(config, "my-preview-123", nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -146,7 +146,7 @@ func TestResolveConfig_SelfEnvRef(t *testing.T) {
 		},
 	}
 
-	resolved, err := ResolveConfig(config, "p1", nil)
+	resolved, _, err := ResolveConfig(config, "p1", nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -170,7 +170,7 @@ func TestResolveConfig_MissingSecret(t *testing.T) {
 		},
 	}
 
-	_, err := ResolveConfig(config, "p1", nil)
+	_, _, err := ResolveConfig(config, "p1", nil, nil)
 	if err == nil {
 		t.Error("expected error for missing secret, got nil")
 	}
@@ -190,7 +190,7 @@ func TestResolveConfig_UnknownServiceRef(t *testing.T) {
 		},
 	}
 
-	_, err := ResolveConfig(config, "p1", nil)
+	_, _, err := ResolveConfig(config, "p1", nil, nil)
 	if err == nil {
 		t.Error("expected error for unknown service, got nil")
 	}
@@ -216,7 +216,7 @@ func TestResolveConfig_TemplateInString(t *testing.T) {
 		},
 	}
 
-	resolved, err := ResolveConfig(config, "p1", nil)
+	resolved, _, err := ResolveConfig(config, "p1", nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -241,7 +241,7 @@ func TestResolveConfig_GenerateLength(t *testing.T) {
 		},
 	}
 
-	resolved, err := ResolveConfig(config, "p1", nil)
+	resolved, _, err := ResolveConfig(config, "p1", nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -265,7 +265,7 @@ func TestResolveConfig_GenerateInvalidLength(t *testing.T) {
 		},
 	}
 
-	_, err := ResolveConfig(config, "p1", nil)
+	_, _, err := ResolveConfig(config, "p1", nil, nil)
 	if err == nil {
 		t.Error("expected error for Generate(0), got nil")
 	}
@@ -285,7 +285,7 @@ func TestResolveConfig_UnknownPreviewProperty(t *testing.T) {
 		},
 	}
 
-	_, err := ResolveConfig(config, "p1", nil)
+	_, _, err := ResolveConfig(config, "p1", nil, nil)
 	if err == nil {
 		t.Error("expected error for unknown preview property, got nil")
 	}
@@ -305,7 +305,7 @@ func TestResolveConfig_UnknownVariable(t *testing.T) {
 		},
 	}
 
-	_, err := ResolveConfig(config, "p1", nil)
+	_, _, err := ResolveConfig(config, "p1", nil, nil)
 	if err == nil {
 		t.Error("expected error for unknown variable namespace, got nil")
 	}
@@ -313,7 +313,7 @@ func TestResolveConfig_UnknownVariable(t *testing.T) {
 
 func TestResolveConfig_PreservesMetadata(t *testing.T) {
 	config := baseConfig()
-	resolved, err := ResolveConfig(config, "p1", nil)
+	resolved, _, err := ResolveConfig(config, "p1", nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -342,7 +342,7 @@ func TestResolveConfig_ServiceNoPort(t *testing.T) {
 		},
 	}
 
-	_, err := ResolveConfig(config, "p1", nil)
+	_, _, err := ResolveConfig(config, "p1", nil, nil)
 	if err == nil {
 		t.Error("expected error for missing port, got nil")
 	}
@@ -374,7 +374,7 @@ func TestResolveConfig_SeedPoststartCmdBareEnvRef(t *testing.T) {
 		},
 	}
 
-	resolved, err := ResolveConfig(config, "p1", nil)
+	resolved, _, err := ResolveConfig(config, "p1", nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -411,7 +411,7 @@ func TestResolveConfig_SeedPoststartCmdCrossServiceEnvRef(t *testing.T) {
 		},
 	}
 
-	resolved, err := ResolveConfig(config, "p1", nil)
+	resolved, _, err := ResolveConfig(config, "p1", nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -440,7 +440,7 @@ func TestResolveConfig_SeedPoststartCmdSecretRef(t *testing.T) {
 	}
 
 	secrets := map[string]string{"DB_TOKEN": "tok123"}
-	resolved, err := ResolveConfig(config, "p1", secrets)
+	resolved, _, err := ResolveConfig(config, "p1", secrets, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -468,7 +468,7 @@ func TestResolveConfig_SeedPoststartCmdPreviewID(t *testing.T) {
 		},
 	}
 
-	resolved, err := ResolveConfig(config, "my-preview-42", nil)
+	resolved, _, err := ResolveConfig(config, "my-preview-42", nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -497,7 +497,7 @@ func TestResolveConfig_SeedPrestartPassedThrough(t *testing.T) {
 		},
 	}
 
-	resolved, err := ResolveConfig(config, "p1", nil)
+	resolved, _, err := ResolveConfig(config, "p1", nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -523,12 +523,173 @@ func TestResolveConfig_SeedNilPassedThrough(t *testing.T) {
 		},
 	}
 
-	resolved, err := ResolveConfig(config, "p1", nil)
+	resolved, _, err := ResolveConfig(config, "p1", nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
 	if resolved.Services["api"].Seed != nil {
 		t.Error("expected nil seed, got non-nil")
+	}
+}
+
+// --- Generated secrets persistence tests ---
+
+func TestResolveConfig_GenerateReturnsGeneratedSecrets(t *testing.T) {
+	config := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "24h"},
+		Services: map[string]types.ServiceConfig{
+			"db": {
+				Image: "postgres:16",
+				Env: map[string]string{
+					"POSTGRES_PASSWORD": "${Generate(16)}",
+				},
+			},
+		},
+	}
+
+	_, generated, err := ResolveConfig(config, "p1", nil, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	val, ok := generated["db.POSTGRES_PASSWORD"]
+	if !ok {
+		t.Fatal("expected generated secret for db.POSTGRES_PASSWORD")
+	}
+	if len(val) != 16 {
+		t.Errorf("generated secret length = %d, want 16", len(val))
+	}
+}
+
+func TestResolveConfig_GenerateReusesSavedSecrets(t *testing.T) {
+	config := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "24h"},
+		Services: map[string]types.ServiceConfig{
+			"db": {
+				Image: "postgres:16",
+				Env: map[string]string{
+					"POSTGRES_PASSWORD": "${Generate(16)}",
+				},
+			},
+		},
+	}
+
+	saved := map[string]string{
+		"db.POSTGRES_PASSWORD": "previously_saved!",
+	}
+
+	resolved, generated, err := ResolveConfig(config, "p1", nil, saved)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if resolved.Services["db"].Env["POSTGRES_PASSWORD"] != "previously_saved!" {
+		t.Errorf("POSTGRES_PASSWORD = %q, want %q", resolved.Services["db"].Env["POSTGRES_PASSWORD"], "previously_saved!")
+	}
+	if generated["db.POSTGRES_PASSWORD"] != "previously_saved!" {
+		t.Errorf("generated map should contain saved value, got %q", generated["db.POSTGRES_PASSWORD"])
+	}
+}
+
+func TestResolveConfig_GenerateStableAcrossRuns(t *testing.T) {
+	config := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "24h"},
+		Services: map[string]types.ServiceConfig{
+			"db": {
+				Image: "postgres:16",
+				Env: map[string]string{
+					"PASSWORD": "${Generate(20)}",
+				},
+			},
+		},
+	}
+
+	// First run: no saved secrets
+	_, generated1, err := ResolveConfig(config, "p1", nil, nil)
+	if err != nil {
+		t.Fatalf("run 1: unexpected error: %v", err)
+	}
+
+	// Second run: pass generated secrets from first run
+	resolved2, generated2, err := ResolveConfig(config, "p1", nil, generated1)
+	if err != nil {
+		t.Fatalf("run 2: unexpected error: %v", err)
+	}
+
+	if resolved2.Services["db"].Env["PASSWORD"] != generated1["db.PASSWORD"] {
+		t.Errorf("second run should reuse first run's value: got %q, want %q",
+			resolved2.Services["db"].Env["PASSWORD"], generated1["db.PASSWORD"])
+	}
+	if generated2["db.PASSWORD"] != generated1["db.PASSWORD"] {
+		t.Errorf("generated secrets should be stable across runs")
+	}
+}
+
+func TestResolveConfig_GenerateCrossServiceRefUsesSaved(t *testing.T) {
+	config := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "24h"},
+		Services: map[string]types.ServiceConfig{
+			"db": {
+				Image: "postgres:16",
+				Port:  5432,
+				Env: map[string]string{
+					"POSTGRES_PASSWORD": "${Generate(16)}",
+				},
+			},
+			"api": {
+				Image:     "api:latest",
+				DependsOn: []string{"db"},
+				Env: map[string]string{
+					"DB_PASS": "${services.db.env.POSTGRES_PASSWORD}",
+				},
+			},
+		},
+	}
+
+	saved := map[string]string{
+		"db.POSTGRES_PASSWORD": "stable_password!",
+	}
+
+	resolved, _, err := ResolveConfig(config, "p1", nil, saved)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if resolved.Services["db"].Env["POSTGRES_PASSWORD"] != "stable_password!" {
+		t.Errorf("DB POSTGRES_PASSWORD = %q, want %q", resolved.Services["db"].Env["POSTGRES_PASSWORD"], "stable_password!")
+	}
+	if resolved.Services["api"].Env["DB_PASS"] != "stable_password!" {
+		t.Errorf("API DB_PASS = %q, want %q (should follow saved db secret)", resolved.Services["api"].Env["DB_PASS"], "stable_password!")
+	}
+}
+
+func TestResolveConfig_NonGenerateEnvNotInGeneratedMap(t *testing.T) {
+	config := types.PreviewConfig{
+		Version: 1,
+		Preview: types.PreviewSettings{TTL: "24h"},
+		Services: map[string]types.ServiceConfig{
+			"api": {
+				Image: "api:latest",
+				Env: map[string]string{
+					"STATIC": "hello",
+					"SECRET": "${secrets.MY_KEY}",
+				},
+			},
+		},
+	}
+
+	secrets := map[string]string{"MY_KEY": "val"}
+	_, generated, err := ResolveConfig(config, "p1", secrets, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(generated) != 0 {
+		t.Errorf("expected no generated secrets, got %d: %v", len(generated), generated)
 	}
 }

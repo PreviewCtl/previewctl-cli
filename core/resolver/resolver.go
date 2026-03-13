@@ -20,10 +20,22 @@ var (
 // ResolveConfig resolves all ${...} template variables in service env values.
 // Services are resolved in dependency order so that ${services.<name>.env.<KEY>}
 // references can read already-resolved env vars from upstream services.
-func ResolveConfig(config types.PreviewConfig, previewID string, secrets map[string]string) (types.PreviewConfig, error) {
+//
+// savedGeneratedSecrets holds previously generated values keyed as "service.envKey".
+// When a ${Generate(N)} expression is encountered and a saved value exists for the
+// same service+key, the saved value is reused instead of generating a new random string.
+//
+// The second return value contains the final resolved values of every env key whose
+// template used ${Generate(N)}, keyed the same way ("service.envKey"), so callers
+// can persist them for the next run.
+func ResolveConfig(config types.PreviewConfig, previewID string, secrets map[string]string, savedGeneratedSecrets map[string]string) (types.PreviewConfig, map[string]string, error) {
+	if savedGeneratedSecrets == nil {
+		savedGeneratedSecrets = make(map[string]string)
+	}
+
 	order, err := deployment.ResolveServiceDeploymentOrderFromConfig(config)
 	if err != nil {
-		return types.PreviewConfig{}, fmt.Errorf("failed to determine service resolution order: %w", err)
+		return types.PreviewConfig{}, nil, fmt.Errorf("failed to determine service resolution order: %w", err)
 	}
 
 	resolved := types.PreviewConfig{
@@ -32,11 +44,26 @@ func ResolveConfig(config types.PreviewConfig, previewID string, secrets map[str
 		Services: make(map[string]types.ServiceConfig, len(config.Services)),
 	}
 
+	generatedSecrets := make(map[string]string)
+
 	for _, name := range order {
 		svc := config.Services[name]
 		resolvedEnv, err := resolveServiceEnv(name, svc.Env, config, previewID, secrets, resolved.Services)
 		if err != nil {
-			return types.PreviewConfig{}, err
+			return types.PreviewConfig{}, nil, err
+		}
+
+		// For env keys whose templates use Generate(), reuse saved values or
+		// record newly generated values for persistence.
+		for key, originalValue := range svc.Env {
+			if !generateExpr.MatchString(templateVar.FindString(originalValue)) && !containsGenerate(originalValue) {
+				continue
+			}
+			lookupKey := name + "." + key
+			if saved, ok := savedGeneratedSecrets[lookupKey]; ok {
+				resolvedEnv[key] = saved
+			}
+			generatedSecrets[lookupKey] = resolvedEnv[key]
 		}
 
 		resolvedSvc := svc
@@ -51,7 +78,7 @@ func ResolveConfig(config types.PreviewConfig, previewID string, secrets map[str
 				if entry.Cmd != "" {
 					resolvedCmd, err := resolveValue(entry.Cmd, config, previewID, secrets, resolvedEnv, resolved.Services)
 					if err != nil {
-						return types.PreviewConfig{}, fmt.Errorf("services.%s.seed.poststart[%d].cmd: %w", name, i, err)
+						return types.PreviewConfig{}, nil, fmt.Errorf("services.%s.seed.poststart[%d].cmd: %w", name, i, err)
 					}
 					entry.Cmd = resolvedCmd
 				}
@@ -63,7 +90,17 @@ func ResolveConfig(config types.PreviewConfig, previewID string, secrets map[str
 		resolved.Services[name] = resolvedSvc
 	}
 
-	return resolved, nil
+	return resolved, generatedSecrets, nil
+}
+
+// containsGenerate reports whether value contains a ${Generate(...)} template expression.
+func containsGenerate(value string) bool {
+	for _, match := range templateVar.FindAllStringSubmatch(value, -1) {
+		if generateExpr.MatchString(match[1]) {
+			return true
+		}
+	}
+	return false
 }
 
 // resolveServiceEnv resolves env vars for a single service in dependency order.

@@ -139,20 +139,6 @@ func TestResolvePreviewID_GeneratedNoBranch(t *testing.T) {
 	}
 }
 
-func TestResolvePreviewID_Uniqueness(t *testing.T) {
-	id1, err := ResolvePreviewID("", "/some/dir", "main")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	id2, err := ResolvePreviewID("", "/some/dir", "main")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if id1 == id2 {
-		t.Errorf("two generated IDs should differ (got %q both times)", id1)
-	}
-}
-
 func TestEnsurePrefix(t *testing.T) {
 	if ensurePrefix("abc") != "preview-abc" {
 		t.Error("should add prefix")

@@ -40,6 +40,7 @@ export default defineConfig({
                 {
                     label: "Guides",
                     items: [
+                        { label: "Secrets & Env Vars", slug: "guides/secrets-and-env" },
                         { label: "Seed Scripts", slug: "guides/seed-scripts" },
                     ],
                 },

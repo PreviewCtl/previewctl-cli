@@ -17,10 +17,37 @@ import (
 	"github.com/previewctl/previewctl-core/types"
 )
 
-func HandleUp(ctx context.Context, previewID string, previewEnvID string, branch string, config types.PreviewConfig, secrets map[string]string, userSecrets map[string]string, portStore *database.PortMappingStore, workingDir string) error {
-	resolvedConfig, err := resolver.ResolveConfig(config, previewID, secrets)
+func HandleUp(ctx context.Context, previewID string, previewEnvID string, branch string, config types.PreviewConfig, secrets map[string]string, userSecrets map[string]string, portStore *database.PortMappingStore, secretStore *database.GeneratedSecretStore, workingDir string) error {
+	// Load previously generated secrets so that Generate() expressions
+	// produce stable values across successive runs of the same environment.
+	savedRows, err := secretStore.FindByPreviewEnv(ctx, previewEnvID)
+	if err != nil {
+		return fmt.Errorf("failed to load generated secrets: %w", err)
+	}
+	savedGeneratedSecrets := make(map[string]string, len(savedRows))
+	for _, row := range savedRows {
+		savedGeneratedSecrets[row.ServiceName+"."+row.EnvKey] = row.Value
+	}
+
+	resolvedConfig, generatedSecrets, err := resolver.ResolveConfig(config, previewID, secrets, savedGeneratedSecrets)
 	if err != nil {
 		return fmt.Errorf("failed to resolve config variables: %w", err)
+	}
+
+	// Persist any generated secrets for reuse on next up.
+	for key, value := range generatedSecrets {
+		parts := strings.SplitN(key, ".", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		if err := secretStore.Upsert(ctx, &store.GeneratedSecret{
+			PreviewEnvID: previewEnvID,
+			ServiceName:  parts[0],
+			EnvKey:       parts[1],
+			Value:        value,
+		}); err != nil {
+			return fmt.Errorf("failed to save generated secret for %s: %w", key, err)
+		}
 	}
 
 	deploymentOrder, err := deployment.ResolveServiceDeploymentOrderFromConfig(resolvedConfig)

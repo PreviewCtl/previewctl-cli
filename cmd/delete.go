@@ -29,6 +29,7 @@ local database.`,
 
 		envStore := database.NewPreviewEnvironmentStore(DB)
 		portStore := database.NewPortMappingStore(DB)
+		secretStore := database.NewGeneratedSecretStore(DB)
 		var env *store.PreviewEnvironment
 		var err error
 		env, err = envStore.FindByName(cmd.Context(), nameOrId)
@@ -77,6 +78,10 @@ local database.`,
 		// Clean up database records
 		if err := portStore.DeleteByPreviewEnv(cmd.Context(), env.ID); err != nil {
 			return fmt.Errorf("failed to delete port mappings: %w", err)
+		}
+
+		if err := secretStore.DeleteByPreviewEnv(cmd.Context(), env.ID); err != nil {
+			return fmt.Errorf("failed to delete generated secrets: %w", err)
 		}
 
 		if err := envStore.Delete(cmd.Context(), env.ID); err != nil {

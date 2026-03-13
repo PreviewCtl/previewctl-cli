@@ -9,10 +9,9 @@ PreviewCtl lets you copy files into containers and run initialization commands u
 
 Seeds are defined under `services.<name>.seed` and run at two stages:
 
-| Stage | When it runs | Can run commands? | Use case |
-|-------|-------------|-------------------|----------|
-| `prestart` | After container is created, **before** it starts | No | Config files, static data files, pre-built database files |
-| `poststart` | After container starts and is **healthy** | Yes (`cmd`) | Migrations, SQL seeds, data imports |
+**`prestart`** — Runs after the container is created, **before** it starts. Cannot run commands. Use for config files, static data files, and pre-built database files.
+
+**`poststart`** — Runs after the container starts and is **healthy**. Supports `cmd` to execute commands. Use for migrations, SQL seeds, and data imports.
 
 Each seed entry has:
 

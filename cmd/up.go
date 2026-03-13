@@ -53,6 +53,7 @@ required dependency order.`,
 
 		envStore := database.NewPreviewEnvironmentStore(DB)
 		portStore := database.NewPortMappingStore(DB)
+		secretStore := database.NewGeneratedSecretStore(DB)
 
 		previewEnvName, err := resolvePreviewEnv(cmd.Context(), envStore, branch)
 		if err != nil {
@@ -63,7 +64,7 @@ required dependency order.`,
 			return err
 		}
 
-		if err := up.HandleUp(cmd.Context(), previewEnvName, previewEnv.ID, branch, config, resolutionSecrets, userSecrets, portStore, workingDir); err != nil {
+		if err := up.HandleUp(cmd.Context(), previewEnvName, previewEnv.ID, branch, config, resolutionSecrets, userSecrets, portStore, secretStore, workingDir); err != nil {
 			return err
 		}
 

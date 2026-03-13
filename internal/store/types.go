@@ -20,3 +20,14 @@ type PortMapping struct {
 	HostPort      int    `db:"host_port"`
 	CreatedAt     int64  `db:"created_at"`
 }
+
+// GeneratedSecret stores a generated secret value for a service env var in a preview environment,
+// so that ${Generate(N)} expressions produce stable values across successive `up` commands.
+type GeneratedSecret struct {
+	ID           string `db:"id"`
+	PreviewEnvID string `db:"preview_env_id"`
+	ServiceName  string `db:"service_name"`
+	EnvKey       string `db:"env_key"`
+	Value        string `db:"value"`
+	CreatedAt    int64  `db:"created_at"`
+}
